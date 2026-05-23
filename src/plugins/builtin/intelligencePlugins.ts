@@ -102,6 +102,15 @@ const SAMPLE_ENTITIES: Array<Omit<GeoEntity, "timestamp">> = [
     },
 ];
 
+const CAMERA_SOURCE_COLORS: Record<string, string> = {
+    caltrans: "#22d3ee",
+    gdot: "#a3e635",
+    ny511: "#60a5fa",
+    tfl: "#f472b6",
+    wsdot: "#f59e0b",
+    unknown: "#a855f7",
+};
+
 type FeatureLike = {
     id?: string | number;
     geometry?: {
@@ -217,7 +226,51 @@ function mapFeatureCollection(data: unknown, pluginId: string, maxEntities?: num
 function mapCameraPayload(data: unknown, maxEntities?: number): GeoEntity[] {
     const payload = getRecord(data);
     const cameras = Array.isArray(payload.cameras) ? payload.cameras as FeatureLike[] : [];
-    return mapFeatureCollection({ features: cameras }, "camera", maxEntities);
+    const entities: GeoEntity[] = [];
+
+    for (let index = 0; index < cameras.length; index += 1) {
+        const feature = cameras[index];
+        const coordinates = getFeatureCoordinates(feature);
+        if (!coordinates) continue;
+
+        const [longitude, latitude, altitude] = coordinates;
+        const properties = getRecord(feature.properties);
+        const source = (getString(properties.source) ?? "unknown").toLowerCase();
+        const name = getString(properties.name);
+        const route = getString(properties.route);
+        const direction = getString(properties.direction);
+        const location = getString(properties.location_description);
+        const rawId = getString(properties.id)
+            ?? getString(feature.id)
+            ?? [name, route, direction, location, latitude.toFixed(5), longitude.toFixed(5)]
+                .filter(Boolean)
+                .join("-")
+                .replace(/[^a-zA-Z0-9._-]+/g, "-")
+            ?? `camera-${index}`;
+        const label = [source.toUpperCase(), route || name || location || "Traffic camera"]
+            .filter(Boolean)
+            .join(" - ");
+
+        entities.push({
+            id: `camera-${source}-${rawId}-${index}`,
+            pluginId: "camera",
+            latitude,
+            longitude,
+            altitude,
+            heading: getFiniteNumber(properties.heading),
+            timestamp: getTimestamp(properties.time ?? properties.timestamp ?? properties.lastFetchedAt),
+            label,
+            properties: {
+                ...properties,
+                source,
+                sourcePlugin: "camera",
+            },
+        });
+
+        if (maxEntities && entities.length >= maxEntities) break;
+    }
+
+    return entities;
 }
 
 function createLayerConfig(color: string, maxEntities?: number): LayerConfig {
@@ -351,14 +404,13 @@ function createCameraPlugin(): WorldPlugin {
     const config: ApiPluginConfig = {
         id: "camera",
         name: "Public Cameras",
-        description: "Traffic and public camera metadata from enabled adapters.",
+        description: "All DOT and public traffic cameras from enabled adapters.",
         endpoint: "/api/camera/traffic?sources=all",
         icon: "Camera",
         category: "infrastructure",
         color: "#a855f7",
         intervalMs: 300_000,
-        pointSize: 10,
-        maxEntities: 2000,
+        pointSize: 7,
     };
 
     return {
@@ -374,6 +426,19 @@ function createCameraPlugin(): WorldPlugin {
 
             const data = await response.json();
             return mapCameraPayload(data, config.maxEntities);
+        },
+        renderEntity(entity) {
+            const source = getString(entity.properties.source)?.toLowerCase() ?? "unknown";
+            return renderPoint(entity, CAMERA_SOURCE_COLORS[source] ?? CAMERA_SOURCE_COLORS.unknown, config.pointSize, false);
+        },
+        getLegend() {
+            return [
+                { label: "Caltrans", color: CAMERA_SOURCE_COLORS.caltrans },
+                { label: "GDOT", color: CAMERA_SOURCE_COLORS.gdot },
+                { label: "511NY", color: CAMERA_SOURCE_COLORS.ny511 },
+                { label: "TfL", color: CAMERA_SOURCE_COLORS.tfl },
+                { label: "WSDOT", color: CAMERA_SOURCE_COLORS.wsdot },
+            ];
         },
     };
 }
