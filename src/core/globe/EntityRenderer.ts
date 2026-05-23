@@ -110,10 +110,11 @@ function renderSingleEntity(
     currentIds.add(entity.id);
     Cartesian3.fromDegrees(entity.longitude, entity.latitude, entity.altitude || 0, Ellipsoid.WGS84, scratchPosition);
     
-    // Auto-upgrade missing icons to SVG Billboards so pixelOffsets (spiderifier) will work
+    // Billboard plugins without an icon get a generated dot. Point plugins stay
+    // as point primitives so simple data feeds do not depend on image resources.
     const effectiveOptions = { ...options };
     const baseColor = getEntityColor(effectiveOptions);
-    if (!effectiveOptions.iconUrl && effectiveOptions.type !== "model") {
+    if (!effectiveOptions.iconUrl && effectiveOptions.type === "billboard") {
         const baseOutlineColor = getCachedColor(options.outlineColor) || Color.BLACK;
         const outWidth = options.outlineWidth || 1;
         const pSize = options.size || (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches ? 12 : 8);

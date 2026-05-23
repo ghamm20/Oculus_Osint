@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { BrainCircuit, CircuitBoard, DownloadCloud, Globe2, Puzzle, Search, Star } from "lucide-react";
+import { AlertCircle, BrainCircuit, CircuitBoard, DownloadCloud, Globe2, Puzzle, Radar, Search, Star } from "lucide-react";
 
 import { useStore } from "@/core/state/store";
 import { useIsMobile } from "@/core/hooks/useIsMobile";
 import { useResizablePanel } from "@/core/hooks/useResizablePanel";
 import { pluginManager } from "@/core/plugins/PluginManager";
+import { SAMPLE_INTELLIGENCE_PLUGIN_ID } from "@/plugins/builtin/intelligencePlugins";
 import { ImageryPicker } from "./ImageryPicker";
 import { LayerItem } from "./LayerItem";
 import { FavoritesTab } from "./FavoritesTab";
@@ -33,6 +34,10 @@ export function LayerPanel() {
 
     const allPlugins = pluginManager.getAllPlugins();
     const [searchQuery, setSearchQuery] = useState("");
+    const totalLoadedEntities = Object.values(entitiesByPlugin).reduce((total, entities) => total + entities.length, 0);
+    const enabledLayerCount = Object.values(layers).filter((layer) => layer.enabled).length;
+    const isAnyLayerLoading = Object.values(layers).some((layer) => layer.loading);
+    const noDataLoaded = totalLoadedEntities === 0 && !isAnyLayerLoading;
 
     // Group by category
     const grouped: Record<string, typeof allPlugins> = {};
@@ -61,6 +66,9 @@ export function LayerPanel() {
         "natural-disaster": "Natural Disasters",
         conflict: "Conflict",
         infrastructure: "Infrastructure",
+        intelligence: "Intelligence",
+        military: "Military",
+        space: "Space",
         cyber: "Cyber",
         economic: "Economic",
         custom: "Custom",
@@ -98,6 +106,23 @@ export function LayerPanel() {
             }
         }
         trackEvent("layer-toggle", { layer: pluginId, enabled: !isEnabled });
+    };
+
+    const loadSampleLayer = async () => {
+        const managed = pluginManager.getPlugin(SAMPLE_INTELLIGENCE_PLUGIN_ID);
+        if (!managed) return;
+
+        const state = useStore.getState();
+        state.initLayer(SAMPLE_INTELLIGENCE_PLUGIN_ID, true);
+        state.setLayerEnabled(SAMPLE_INTELLIGENCE_PLUGIN_ID, true);
+        state.setLayerLoading(SAMPLE_INTELLIGENCE_PLUGIN_ID, true);
+        state.setHighlightLayerId(SAMPLE_INTELLIGENCE_PLUGIN_ID);
+        state.setSelectedEntity(null);
+        state.setConfigPanelOpen(true);
+        state.setActiveConfigTab("intel");
+
+        await pluginManager.enablePlugin(SAMPLE_INTELLIGENCE_PLUGIN_ID);
+        trackEvent("sample-layer-load", { source: "layer-panel" });
     };
 
     const [activeTab, setActiveTab] = useState<"layers" | "imagery" | "favorites" | "import" | "plugins" | "assistant">("layers");
@@ -210,6 +235,24 @@ export function LayerPanel() {
                                 }}
                             />
                         </div>
+                    </div>
+                    <div className={`data-diagnostic ${noDataLoaded ? "data-diagnostic--empty" : ""}`}>
+                        <div className="data-diagnostic__status">
+                            <AlertCircle size={14} />
+                            <span>{noDataLoaded ? "No data loaded" : "Data layer status"}</span>
+                        </div>
+                        <div className="data-diagnostic__meta">
+                            <span>{totalLoadedEntities.toLocaleString()} entities</span>
+                            <span>{enabledLayerCount.toLocaleString()} enabled</span>
+                        </div>
+                        <button
+                            type="button"
+                            className="data-diagnostic__button"
+                            onClick={() => { void loadSampleLayer(); }}
+                        >
+                            <Radar size={14} />
+                            <span>Load sample intelligence layer</span>
+                        </button>
                     </div>
                     <div className="layers-tab-content__list">
                         {Object.entries(grouped).map(([category, plugins]) => (

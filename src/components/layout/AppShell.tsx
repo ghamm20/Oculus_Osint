@@ -32,6 +32,10 @@ import { isDemo } from "@/core/edition";
 
 import { injectHostGlobals } from "@/core/plugins/hostGlobals";
 import { initLogCatcher } from "@/lib/logCatcher";
+import {
+    DEFAULT_VISIBLE_PLUGIN_IDS,
+    registerBuiltInIntelligencePlugins,
+} from "@/plugins/builtin/intelligencePlugins";
 
 const GlobeView = dynamic(() => import("@/core/globe/GlobeView"), {
     ssr: false,
@@ -65,6 +69,8 @@ export function AppShell() {
             await injectHostGlobals();
             setHostReady(true);
 
+            registerBuiltInIntelligencePlugins();
+
             // Fetch disabled built-in plugins before registration
             let disabledIds = new Set<string>();
             try {
@@ -87,13 +93,17 @@ export function AppShell() {
                 });
             }
 
-
+            const startupEnabledPlugins = new Set<string>([
+                ...DEFAULT_VISIBLE_PLUGIN_IDS,
+                ...demoDefaultPlugins,
+            ]);
 
             await pluginManager.init();
 
             for (const plugin of pluginRegistry.getAll()) {
+                if (disabledIds.has(plugin.id)) continue;
                 await pluginManager.registerPlugin(plugin);
-                const shouldEnable = demoDefaultPlugins.has(plugin.id);
+                const shouldEnable = startupEnabledPlugins.has(plugin.id);
                 initLayer(plugin.id, shouldEnable);
                 if (shouldEnable) {
                     await pluginManager.enablePlugin(plugin.id);

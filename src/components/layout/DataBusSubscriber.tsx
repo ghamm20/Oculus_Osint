@@ -7,6 +7,7 @@ import { pluginManager } from "@/core/plugins/PluginManager";
 import { wsClient } from "@/core/data/WsClient";
 import { resolveEngineUrl } from "@/core/data/resolveEngineUrl";
 import { fetchLocalEngineManifest } from "@/core/data/engineManifest";
+import { isBuiltInIntelligencePlugin } from "@/plugins/builtin/intelligencePlugins";
 
 /**
  * Subscribes to DataBus events and syncs state.
@@ -45,6 +46,10 @@ export function DataBusSubscriber() {
 
         const unsubToggle = dataBus.on("layerToggled", ({ pluginId, enabled }) => {
             console.log(`[DataBusSubscriber] layerToggled event received for ${pluginId}, enabled: ${enabled}`);
+            if (isBuiltInIntelligencePlugin(pluginId)) {
+                console.log(`[DataBusSubscriber] ${pluginId} uses local polling; skipping websocket subscription.`);
+                return;
+            }
             const engineUrl = resolveEngineUrl(pluginId);
             console.log(`[DataBusSubscriber] Resolved engine URL for ${pluginId} to ${engineUrl}`);
             if (enabled) {

@@ -5,6 +5,7 @@ import { PluginIcon } from "@/components/common/PluginIcon";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { pluginManager } from "@/core/plugins/PluginManager";
 import type { WorldPlugin } from "@/core/plugins/PluginTypes";
+import { isBuiltInIntelligencePlugin } from "@/plugins/builtin/intelligencePlugins";
 import "./LayerItem.css";
 
 // ─── Category Labels ────────────────────────────────────────
@@ -25,6 +26,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 type TrustTier = "built-in" | "verified" | "unverified";
 
 function getTrust(pluginId: string): TrustTier {
+    if (isBuiltInIntelligencePlugin(pluginId)) return "built-in";
     const manifest = pluginManager.getManifest(pluginId);
     return manifest?.trust ?? "unverified";
 }
