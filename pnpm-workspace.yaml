@@ -1,0 +1,15 @@
+packages:
+  - 'packages/*'
+  - 'packages/*/backend'
+  - 'local-plugins/*'
+
+overrides:
+  '@spz-loader/core': 0.3.0
+
+allowBuilds:
+  '@prisma/engines': true
+  '@sentry/cli': true
+  esbuild: true
+  prisma: true
+  protobufjs: true
+  sharp: true
