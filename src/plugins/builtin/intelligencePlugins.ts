@@ -22,6 +22,9 @@ const BUILT_IN_PLUGIN_IDS = [
     "earthquake",
     "wildfire",
     "camera",
+    "weather-camera",
+    "satellite",
+    "citizen",
 ] as const;
 
 const SAMPLE_ENTITIES: Array<Omit<GeoEntity, "timestamp">> = [
@@ -108,7 +111,37 @@ const CAMERA_SOURCE_COLORS: Record<string, string> = {
     ny511: "#60a5fa",
     tfl: "#f472b6",
     wsdot: "#f59e0b",
+    "chart-md": "#fb7185",
+    ohgo: "#2dd4bf",
+    fl511: "#facc15",
     unknown: "#a855f7",
+};
+
+const SATELLITE_GROUP_COLORS: Record<string, string> = {
+    stations: "#f8fafc",
+    weather: "#38bdf8",
+    resource: "#22c55e",
+    science: "#a78bfa",
+    geo: "#f59e0b",
+    "gps-ops": "#34d399",
+    galileo: "#60a5fa",
+    beidou: "#f87171",
+    visual: "#facc15",
+    intelsat: "#fb923c",
+    ses: "#c084fc",
+    "iridium-next": "#67e8f9",
+    oneweb: "#93c5fd",
+    starlink: "#e5e7eb",
+    unknown: "#94a3b8",
+};
+
+const CITIZEN_SEVERITY_COLORS: Record<string, string> = {
+    critical: "#dc2626",
+    high: "#ef4444",
+    elevated: "#f97316",
+    medium: "#f59e0b",
+    low: "#facc15",
+    unknown: "#f43f5e",
 };
 
 type FeatureLike = {
@@ -435,9 +468,12 @@ function createCameraPlugin(): WorldPlugin {
             return [
                 { label: "Caltrans", color: CAMERA_SOURCE_COLORS.caltrans },
                 { label: "GDOT", color: CAMERA_SOURCE_COLORS.gdot },
+                { label: "Maryland CHART", color: CAMERA_SOURCE_COLORS["chart-md"] },
                 { label: "511NY", color: CAMERA_SOURCE_COLORS.ny511 },
                 { label: "TfL", color: CAMERA_SOURCE_COLORS.tfl },
                 { label: "WSDOT", color: CAMERA_SOURCE_COLORS.wsdot },
+                { label: "OHGO", color: CAMERA_SOURCE_COLORS.ohgo },
+                { label: "FL511", color: CAMERA_SOURCE_COLORS.fl511 },
             ];
         },
     };
@@ -499,6 +535,96 @@ export function registerBuiltInIntelligencePlugins(): void {
             showLabels: true,
         }),
         createCameraPlugin(),
+        {
+            ...createGeoJsonApiPlugin({
+                id: "weather-camera",
+                name: "Weather Cameras",
+                description: "FAA aviation weather cameras across public sites.",
+                endpoint: "/api/weather-cameras",
+                icon: "CloudSun",
+                category: "infrastructure",
+                color: "#0ea5e9",
+                intervalMs: 300_000,
+                pointSize: 7,
+                maxEntities: 4000,
+            }),
+            renderEntity(entity) {
+                const thirdParty = entity.properties.thirdParty === true;
+                return renderPoint(entity, thirdParty ? "#8b5cf6" : "#0ea5e9", 7, false);
+            },
+            getLegend() {
+                return [
+                    { label: "FAA owned", color: "#0ea5e9" },
+                    { label: "Third-party partner", color: "#8b5cf6" },
+                ];
+            },
+        },
+        {
+            ...createGeoJsonApiPlugin({
+                id: "satellite",
+                name: "Satellite Feeds",
+                description: "Live CelesTrak GP satellite positions propagated locally.",
+                endpoint: "/api/satellite",
+                icon: "Satellite",
+                category: "space",
+                color: "#38bdf8",
+                intervalMs: 60_000,
+                pointSize: 8,
+                maxEntities: 3000,
+            }),
+            renderEntity(entity) {
+                const group = getString(entity.properties.group)?.toLowerCase() ?? "unknown";
+                return {
+                    ...renderPoint(entity, SATELLITE_GROUP_COLORS[group] ?? SATELLITE_GROUP_COLORS.unknown, 8, false),
+                    disableManualHorizonCulling: true,
+                };
+            },
+            getLegend() {
+                return [
+                    { label: "Stations", color: SATELLITE_GROUP_COLORS.stations },
+                    { label: "Weather", color: SATELLITE_GROUP_COLORS.weather },
+                    { label: "Science", color: SATELLITE_GROUP_COLORS.science },
+                    { label: "GEO", color: SATELLITE_GROUP_COLORS.geo },
+                    { label: "Navigation", color: SATELLITE_GROUP_COLORS["gps-ops"] },
+                    { label: "Communications", color: SATELLITE_GROUP_COLORS.oneweb },
+                ];
+            },
+            getSelectionBehavior() {
+                return {
+                    showTrail: true,
+                    flyToBaseDistance: 2_500_000,
+                };
+            },
+        },
+        {
+            ...createGeoJsonApiPlugin({
+                id: "citizen",
+                name: "Citizen Authorized Feed",
+                description: "User-configured authorized Citizen or incident export.",
+                endpoint: "/api/citizen",
+                icon: "Siren",
+                category: "intelligence",
+                color: "#f43f5e",
+                intervalMs: 60_000,
+                pointSize: 11,
+                maxEntities: 3000,
+            }),
+            renderEntity(entity) {
+                const severity = getString(entity.properties.severity)
+                    ?? getString(entity.properties.priority)
+                    ?? getString(entity.properties.level)
+                    ?? "unknown";
+                return renderPoint(entity, CITIZEN_SEVERITY_COLORS[severity.toLowerCase()] ?? CITIZEN_SEVERITY_COLORS.unknown, 11, true);
+            },
+            getLegend() {
+                return [
+                    { label: "Critical", color: CITIZEN_SEVERITY_COLORS.critical },
+                    { label: "High", color: CITIZEN_SEVERITY_COLORS.high },
+                    { label: "Elevated", color: CITIZEN_SEVERITY_COLORS.elevated },
+                    { label: "Low", color: CITIZEN_SEVERITY_COLORS.low },
+                ];
+            },
+        },
     ];
 
     for (const plugin of plugins) {

@@ -26,7 +26,8 @@ export function DynamicPropertiesRender({ entity, classNamePrefix = "intel-panel
                 const stringValue = String(value);
                 
                 // Identify property type
-                const isImage = typeof value === "string" && key.toLowerCase().includes("image") && /^https?:\/\//i.test(value);
+                const isRenderableUrl = typeof value === "string" && /^(https?:\/\/|\/)/i.test(value);
+                const isImage = isRenderableUrl && key.toLowerCase().includes("image");
                 const isUrl = !isImage && typeof value === "string" && /^https?:\/\//i.test(value);
                 const isLongText = typeof value === "string" && value.length > 20;
 
