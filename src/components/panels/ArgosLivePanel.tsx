@@ -310,6 +310,31 @@ function feedWallMatches(feed: FeedResolution, filter: FeedWallFilter): boolean 
     return feed.status === "unavailable" || feed.method === "rtsp_proxy_required" || feed.method === "unavailable";
 }
 
+function preferredVisibleFeed(feeds: FeedResolution[]): FeedResolution | null {
+    const rank: FeedMethod[] = ["hls_video", "iframe_embed", "mjpeg_video", "audio_stream", "snapshot_only", "source_page_only", "rtsp_proxy_required", "unavailable", "blocked"];
+    for (const method of rank) {
+        const match = feeds.find((feed) => feed.method === method);
+        if (match) return match;
+    }
+    return null;
+}
+
+function feedActionLabel(feed: FeedResolution): string {
+    if (feed.method === "audio_stream") return "Listen Live";
+    if (feed.method === "snapshot_only") return "Show Snapshot";
+    if (feed.method === "iframe_embed") return "Open Embed";
+    if (feed.method === "hls_video" || feed.method === "mjpeg_video") return "Play Video";
+    if (feed.status === "source-page-only" || feed.status === "api-required") return "Open Source Page";
+    if (feed.method === "rtsp_proxy_required") return "Proxy Required";
+    return "Unavailable";
+}
+
+function feedBadgeLabel(feed: FeedResolution): string {
+    if (feed.status === "playable") return feed.method === "snapshot_only" ? "Snapshot" : feed.method === "audio_stream" ? "Audio" : "Video";
+    if (feed.status === "source-page-only" || feed.status === "api-required") return "Source Page";
+    return feed.status;
+}
+
 function selectedToEvidenceEntity(selected: any): EvidenceEntity | null {
     if (!selected || selected.pluginId !== "argos-live") return null;
     const candidate = selected.properties as Partial<EvidenceEntity> | undefined;
@@ -395,7 +420,7 @@ function VideoPreview({ item }: { item: EvidenceEntity }) {
 }
 
 function HlsFeedPlayer({ feed }: { feed: FeedResolution }) {
-    const [message, setMessage] = useState<string | null>(null);
+    const [message, setMessage] = useState<string | null>("Loading HLS video...");
     return (
         <>
             <HlsPlayer
@@ -413,13 +438,24 @@ function HlsFeedPlayer({ feed }: { feed: FeedResolution }) {
     );
 }
 
+function SnapshotFeedImage({ feed }: { feed: FeedResolution }) {
+    const [tick, setTick] = useState(0);
+    useEffect(() => {
+        const timer = window.setInterval(() => setTick((current) => current + 1), 15_000);
+        return () => window.clearInterval(timer);
+    }, []);
+    const base = feed.snapshot_url ?? feed.live_url ?? "";
+    const separator = base.includes("?") ? "&" : "?";
+    return <img src={`${base}${separator}argos_refresh=${tick}`} alt={feed.title} />;
+}
+
 function FeedPlayer({ feed }: { feed: FeedResolution }) {
     if (feed.method === "iframe_embed" && feed.player_url) {
         return <iframe src={feed.player_url} title={feed.title} allow="fullscreen; autoplay; picture-in-picture" loading="lazy" />;
     }
     if (feed.method === "hls_video" && feed.live_url) return <HlsFeedPlayer feed={feed} />;
     if ((feed.method === "mjpeg_video" || feed.method === "snapshot_only") && (feed.snapshot_url || feed.live_url)) {
-        return <img src={feed.snapshot_url ?? feed.live_url ?? ""} alt={feed.title} />;
+        return <SnapshotFeedImage feed={feed} />;
     }
     if (feed.method === "audio_stream" && feed.live_url) {
         return (
@@ -539,9 +575,10 @@ export function ArgosLivePanel() {
             const feedWallPayload = await feedWallResponse.json();
             const nextProviders = Array.isArray(health.providers) ? health.providers as ProviderHealth[] : [];
             const nextItems = Array.isArray(entityPayload.entities) ? entityPayload.entities as EvidenceEntity[] : [];
+            const nextFeeds = Array.isArray(feedWallPayload.feeds) ? feedWallPayload.feeds as FeedResolution[] : [];
             setProviders(nextProviders);
             setItems(nextItems);
-            setFeedWall(Array.isArray(feedWallPayload.feeds) ? feedWallPayload.feeds as FeedResolution[] : []);
+            setFeedWall(nextFeeds);
             syncEntitiesToMap(nextItems);
             setActivity(Array.isArray(activityPayload.events) ? activityPayload.events as SensorEvent[] : []);
             setBrief(briefPayload.brief ?? null);
@@ -555,7 +592,7 @@ export function ArgosLivePanel() {
                 }
                 return next;
             });
-            setActiveItem((current) => current ?? nextItems[0] ?? null);
+            setActiveItem((current) => current ?? preferredVisibleFeed(nextFeeds)?.entity ?? nextItems[0] ?? null);
         } catch (err: any) {
             setError(err?.message ?? String(err));
         } finally {
@@ -967,7 +1004,7 @@ export function ArgosLivePanel() {
                         <div className="argos-feed-panel__actions">
                             <button type="button" onClick={() => { void openLiveView(activeFeed.entity); }} disabled={!activeFeed.actions.can_play_live && !activeFeed.actions.can_listen_live && !activeFeed.source_page_url}>
                                 <Play size={13} />
-                                <span>{activeFeed.source_type === "audio" ? "Listen Live" : activeFeed.status === "playable" ? "Play Live" : "Open Handoff"}</span>
+                                <span>{feedActionLabel(activeFeed)}</span>
                             </button>
                             <button type="button" onClick={() => openExternal(activeFeed.source_page_url)} disabled={!activeFeed.actions.can_open_source}>
                                 <ExternalLink size={13} />
@@ -1052,7 +1089,7 @@ export function ArgosLivePanel() {
                             </div>
                             <span className="argos-feed-card__topline">
                                 <small>{isDemoFeed(feed) ? "DEMO" : feed.provider}</small>
-                                <em>{feed.status === "playable" ? "Playable" : feed.status === "source-page-only" || feed.status === "api-required" ? "Source Page" : feed.status}</em>
+                                <em>{feedBadgeLabel(feed)}</em>
                             </span>
                             <strong>{feed.title}</strong>
                             <small>{feedLocation(feed)}</small>
