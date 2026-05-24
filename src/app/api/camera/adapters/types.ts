@@ -1,7 +1,7 @@
 /**
  * Public-camera adapter interface.
  *
- * Each upstream camera source (Caltrans, GDOT, TfL, 511NY, WSDOT, …)
+ * Each upstream camera source (Caltrans, GDOT, TfL, 511NY, WSDOT, etc.)
  * implements `CameraAdapter`. The registry collects them; `/api/camera/traffic`
  * merges; `/api/camera/list` exposes their metadata for client-side source
  * discovery + selection UI.
@@ -36,7 +36,7 @@ export interface CameraFeature {
         streamType?: StreamType;
         /** Optional HLS-specific URL when both image + HLS are available. */
         hls?: string | null;
-        // Display + filter fields — adapters fill what they have.
+        // Display + filter fields - adapters fill what they have.
         name?: string;
         country?: string;
         region?: string;
@@ -44,6 +44,7 @@ export interface CameraFeature {
         route?: string;
         direction?: string;
         location_description?: string;
+        timestamp?: string;
         categories?: string[];
         /**
          * Adapter-specific extras (mile markers, county ids, etc.). Kept
@@ -61,6 +62,11 @@ export interface CameraAdapterMeta {
     displayName: string;
     /** Geographic scope, used for grouping in source-picker UIs. */
     region: string;
+    /** Optional country code/name and US state code for compact source UIs. */
+    country?: string;
+    state?: string;
+    /** Rollout bucket for source UIs. */
+    priority?: "initial" | "expanded";
     /** True if the adapter requires an env var to function. */
     requiresKey?: {
         envVar: string;
@@ -81,6 +87,9 @@ export interface CameraAdapter {
     readonly id: string;
     readonly displayName: string;
     readonly region: string;
+    readonly country?: string;
+    readonly state?: string;
+    readonly priority?: "initial" | "expanded";
     readonly requiresKey?: { envVar: string; signupUrl: string };
     /** Default cache TTL for this adapter's feed. Defaults to 24h. */
     readonly cacheTtlMs?: number;
@@ -89,7 +98,7 @@ export interface CameraAdapter {
 }
 
 /**
- * Legacy alias — every existing fetcher imports this name. Kept as alias
+ * Legacy alias - every existing fetcher imports this name. Kept as alias
  * to `CameraFeature` so old code keeps compiling while we migrate.
  *
  * @deprecated Use `CameraFeature` from `adapters/types` directly.

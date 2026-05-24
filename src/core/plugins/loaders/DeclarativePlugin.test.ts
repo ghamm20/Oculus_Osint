@@ -108,6 +108,7 @@ describe("DeclarativePlugin", () => {
         const plugin = new DeclarativePlugin(makeManifest());
         await plugin.initialize({
             apiBaseUrl: "",
+            getEngineUrl: () => "",
             timeRange: { start: new Date(), end: new Date() },
             onDataUpdate: () => {},
             onError: () => {},

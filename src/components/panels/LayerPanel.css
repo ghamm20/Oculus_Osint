@@ -198,3 +198,323 @@
     border-color: rgba(var(--accent-rgb), 0.5);
     background: rgba(var(--accent-rgb), 0.14);
 }
+
+.camera-sources {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 var(--space-md) var(--space-md);
+}
+
+.camera-sources__header,
+.camera-sources__title,
+.camera-sources__stats,
+.camera-sources__load-btn,
+.camera-sources__error,
+.camera-source-row,
+.camera-source-row__name,
+.camera-source-row__status,
+.camera-source-row__key {
+    display: flex;
+    align-items: center;
+}
+
+.camera-sources__header {
+    justify-content: space-between;
+    gap: var(--space-sm);
+}
+
+.camera-sources__title {
+    gap: 6px;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.camera-sources__subtitle {
+    margin-top: 3px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+}
+
+.camera-sources__icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    background: rgba(0, 0, 0, 0.18);
+    cursor: pointer;
+}
+
+.camera-sources__icon-btn:hover:not(:disabled) {
+    color: var(--accent-cyan);
+    border-color: rgba(var(--accent-rgb), 0.45);
+    background: rgba(var(--accent-rgb), 0.08);
+}
+
+.camera-sources__icon-btn:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+.camera-sources__stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-sm);
+}
+
+.camera-sources__stats > div {
+    min-width: 0;
+    padding: var(--space-sm);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.16);
+}
+
+.camera-sources__stats span,
+.camera-source-row__count {
+    display: block;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.camera-sources__stats small {
+    display: block;
+    margin-top: 2px;
+    color: var(--text-muted);
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.camera-sources__load-btn {
+    justify-content: center;
+    gap: 7px;
+    min-height: 34px;
+    width: 100%;
+    border: 1px solid rgba(var(--accent-rgb), 0.32);
+    border-radius: var(--radius-sm);
+    color: var(--accent-cyan);
+    background: rgba(var(--accent-rgb), 0.08);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.camera-sources__load-btn--active {
+    color: #86efac;
+    border-color: rgba(34, 197, 94, 0.32);
+    background: rgba(34, 197, 94, 0.08);
+}
+
+.camera-sources__load-btn:disabled {
+    cursor: wait;
+    opacity: 0.7;
+}
+
+.camera-sources__error {
+    gap: 6px;
+    padding: var(--space-sm);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    border-radius: var(--radius-sm);
+    color: var(--accent-red);
+    background: rgba(239, 68, 68, 0.08);
+    font-size: 11px;
+}
+
+.camera-sources__section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.camera-sources__section-title {
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.camera-sources__rows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.camera-sources__state-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 5px;
+}
+
+.camera-sources__state {
+    min-width: 0;
+    min-height: 38px;
+    padding: 5px 3px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    background: rgba(0, 0, 0, 0.14);
+    text-align: center;
+}
+
+.camera-sources__state span,
+.camera-sources__state small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.camera-sources__state span {
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.camera-sources__state small {
+    margin-top: 2px;
+    font-size: 8px;
+    text-transform: uppercase;
+}
+
+.camera-sources__state--active {
+    border-color: rgba(34, 197, 94, 0.28);
+    background: rgba(34, 197, 94, 0.08);
+}
+
+.camera-sources__state--active small {
+    color: #86efac;
+}
+
+.camera-sources__state--key {
+    border-color: rgba(250, 204, 21, 0.28);
+    background: rgba(250, 204, 21, 0.08);
+}
+
+.camera-sources__state--key small {
+    color: #facc15;
+}
+
+.camera-sources__state--ready {
+    border-color: rgba(var(--accent-rgb), 0.24);
+    background: rgba(var(--accent-rgb), 0.06);
+}
+
+.camera-sources__state--ready small {
+    color: var(--accent-cyan);
+}
+
+.camera-source-row {
+    justify-content: space-between;
+    gap: var(--space-sm);
+    min-height: 58px;
+    padding: var(--space-sm);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.16);
+}
+
+.camera-source-row--live {
+    border-color: rgba(34, 197, 94, 0.26);
+}
+
+.camera-source-row--key {
+    border-color: rgba(250, 204, 21, 0.28);
+}
+
+.camera-source-row--error {
+    border-color: rgba(239, 68, 68, 0.32);
+}
+
+.camera-source-row__main {
+    min-width: 0;
+}
+
+.camera-source-row__name {
+    gap: 6px;
+    min-width: 0;
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.camera-source-row__name span:last-child,
+.camera-source-row__region,
+.camera-source-row__error,
+.camera-source-row__key {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.camera-source-row__state {
+    flex: 0 0 auto;
+    min-width: 30px;
+    padding: 2px 5px;
+    border: 1px solid rgba(var(--accent-rgb), 0.24);
+    border-radius: var(--radius-sm);
+    color: var(--accent-cyan);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-align: center;
+}
+
+.camera-source-row__region,
+.camera-source-row__error,
+.camera-source-row__key {
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 10px;
+}
+
+.camera-source-row__error {
+    color: var(--accent-red);
+}
+
+.camera-source-row__key {
+    gap: 4px;
+    color: #facc15;
+}
+
+.camera-source-row__metrics {
+    flex: 0 0 auto;
+    min-width: 70px;
+    text-align: right;
+}
+
+.camera-source-row__status {
+    justify-content: flex-end;
+    gap: 4px;
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.camera-source-row--live .camera-source-row__status {
+    color: #86efac;
+}
+
+.camera-source-row--key .camera-source-row__status {
+    color: #facc15;
+}
+
+.camera-source-row--error .camera-source-row__status {
+    color: var(--accent-red);
+}
+
+.camera-sources__spin {
+    animation: assistant-spin 0.9s linear infinite;
+}

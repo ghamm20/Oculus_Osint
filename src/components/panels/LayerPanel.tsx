@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, BrainCircuit, CircuitBoard, DownloadCloud, Globe2, Puzzle, Radar, Search, Star } from "lucide-react";
+import { AlertCircle, BrainCircuit, Camera, CircuitBoard, DownloadCloud, Globe2, Puzzle, Radar, Search, Star } from "lucide-react";
 
 import { useStore } from "@/core/state/store";
 import { useIsMobile } from "@/core/hooks/useIsMobile";
@@ -14,6 +14,7 @@ import { FavoritesTab } from "./FavoritesTab";
 import { ImportPanel } from "@/plugins/geojson/ImportPanel";
 import { PluginsTab } from "./PluginsTab";
 import { OculusAnalystPanel } from "./OculusAnalystPanel";
+import { CameraSourcesPanel } from "./CameraSourcesPanel";
 import "@/plugins/geojson/geojson-importer.css";
 import { trackEvent } from "@/lib/analytics";
 
@@ -125,7 +126,7 @@ export function LayerPanel() {
         trackEvent("sample-layer-load", { source: "layer-panel" });
     };
 
-    const [activeTab, setActiveTab] = useState<"layers" | "imagery" | "favorites" | "import" | "plugins" | "assistant">("layers");
+    const [activeTab, setActiveTab] = useState<"layers" | "sources" | "imagery" | "favorites" | "import" | "plugins" | "assistant">("layers");
     const fontSize = "13px";
 
     return (
@@ -172,6 +173,14 @@ export function LayerPanel() {
                     style={{width: buttonWidth}}
                 >
                     <BrainCircuit size="20" style={{margin: 5, maxHeight: "20%"}} />
+                </button>
+                <button
+                    className={`panel-tab ${activeTab === "sources" ? "panel-tab--active" : ""}`}
+                    onClick={() => { setActiveTab("sources"); trackEvent("panel-tab-switch", { tab: "camera-sources" }); }}
+                    title="Camera Sources"
+                    style={{width: buttonWidth}}
+                >
+                    <Camera size="20" style={{margin: 5, maxHeight: "20%"}} />
                 </button>
                 <button
                     className={`panel-tab ${activeTab === "imagery" ? "panel-tab--active" : ""}`}
@@ -308,6 +317,10 @@ export function LayerPanel() {
 
             {activeTab === "assistant" && (
                 <OculusAnalystPanel />
+            )}
+
+            {activeTab === "sources" && (
+                <CameraSourcesPanel />
             )}
 
             {activeTab === "favorites" && (

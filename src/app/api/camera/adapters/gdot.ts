@@ -2,7 +2,7 @@ import { fetchGdotCameras } from "../gdot/gdotFetcher";
 import type { CameraAdapter, CameraFeature } from "./types";
 
 // GDOT's snapshot infrastructure (navigator-c2c.dot.ga.gov, vss5live.dot.ga.gov)
-// has been retired upstream as of 2026 — both hosts NXDOMAIN. The metadata
+// has been retired upstream as of 2026 - both hosts NXDOMAIN. The metadata
 // API still returns those URLs, so strip them so the client doesn't trigger
 // DNS errors on click. Drop these entries from the filter list once GDOT
 // publishes a working snapshot endpoint.
@@ -19,7 +19,10 @@ function isDeadHost(url: string | null | undefined): boolean {
 export const gdotAdapter: CameraAdapter = {
     id: "gdot",
     displayName: "GDOT (Georgia)",
-    region: "United States — Georgia",
+    region: "United States - Georgia",
+    country: "United States",
+    state: "GA",
+    priority: "initial",
     fetch: async () => {
         const features = (await fetchGdotCameras()) as CameraFeature[];
         return features.map((f) => {

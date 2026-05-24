@@ -4,6 +4,9 @@ import type { CameraAdapter, CameraFeature } from "./types";
 export const ny511Adapter: CameraAdapter = {
     id: "ny511",
     displayName: "511NY (New York State)",
-    region: "United States — New York",
+    region: "United States - New York",
+    country: "United States",
+    state: "NY",
+    priority: "expanded",
     fetch: async () => (await fetch511NyCameras()) as CameraFeature[],
 };

@@ -5,29 +5,15 @@
  * until all features are retrieved.
  */
 
+import type { CameraFeature } from "../adapters/types";
+
 const GDOT_BASE =
     "https://services1.arcgis.com/2iUE8l8JKrP2tygQ/arcgis/rest/services" +
     "/GDOT_Live_Traffic_Cameras/FeatureServer/0/query";
 
 const PAGE_SIZE = 2000;
 
-export interface GdotCameraFeature {
-    type: "Feature";
-    geometry: { type: "Point"; coordinates: [number, number] };
-    properties: {
-        stream: string;
-        hls: string | null;
-        country: string;
-        region: string;
-        city: string;
-        source: string;
-        name: string;
-        route: string;
-        direction: string;
-        location_description: string;
-        categories: string[];
-    };
-}
+export type GdotCameraFeature = CameraFeature;
 
 /** Convert a raw ArcGIS feature into our GeoJSON format. */
 function toGeoJsonFeature(raw: any): GdotCameraFeature | null {

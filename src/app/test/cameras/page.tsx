@@ -147,7 +147,7 @@ export default function CameraTestPage() {
             <div className={styles.grid}>
                 {filtered.map((c, i) => (
                     <CameraTestCard
-                        key={c.feature.properties.stream + i}
+                        key={`${c.feature.properties.stream ?? c.feature.properties.name ?? "camera"}-${i}`}
                         result={c}
                         index={i}
                         globalIndex={cameras.indexOf(c)}

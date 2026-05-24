@@ -7,6 +7,8 @@ import { wsdotAdapter } from "./wsdot";
 import { chartAdapter } from "./chart";
 import { ohgoAdapter } from "./ohgo";
 import { fl511Adapter } from "./fl511";
+import { fl511PublicAdapter } from "./fl511Public";
+import { tnSmartWayAdapter } from "./tnsmartway";
 
 /**
  * All registered adapters. To add a new source, add an import + push the
@@ -17,6 +19,8 @@ import { fl511Adapter } from "./fl511";
 export const ALL_ADAPTERS: CameraAdapter[] = [
     caltransAdapter,
     gdotAdapter,
+    fl511PublicAdapter,
+    tnSmartWayAdapter,
     chartAdapter,
     tflAdapter,
     ny511Adapter,
@@ -30,6 +34,7 @@ const ADAPTERS_BY_ID: Map<string, CameraAdapter> = new Map(
 );
 
 const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_FETCH_TIMEOUT_MS = 20_000;
 
 interface CacheEntry {
     data: CameraFeature[];
@@ -40,15 +45,32 @@ interface CacheEntry {
 
 const cache: Map<string, CacheEntry> = new Map();
 
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    try {
+        return await Promise.race([
+            promise,
+            new Promise<T>((_, reject) => {
+                timeout = setTimeout(
+                    () => reject(new Error(`${label} timed out after ${timeoutMs}ms`)),
+                    timeoutMs,
+                );
+            }),
+        ]);
+    } finally {
+        if (timeout) clearTimeout(timeout);
+    }
+}
+
 export function getAdapter(id: string): CameraAdapter | undefined {
     return ADAPTERS_BY_ID.get(id);
 }
 
 /**
  * Resolve a `?sources=` query value into a list of adapter ids.
- * - empty / unset / "all" → all known adapter ids
- * - "none" → empty list (clients use this to short-circuit)
- * - comma-separated list → only the registered ones, unknown ids dropped
+ * - empty / unset / "all" -> all known adapter ids
+ * - "none" -> empty list (clients use this to short-circuit)
+ * - comma-separated list -> only the registered ones, unknown ids dropped
  */
 export function resolveSources(raw: string | null): string[] {
     if (!raw || raw === "all") return ALL_ADAPTERS.map((a) => a.id);
@@ -71,6 +93,9 @@ export function getAdapterMetadata(): CameraAdapterMeta[] {
             id: a.id,
             displayName: a.displayName,
             region: a.region,
+            country: a.country,
+            state: a.state,
+            priority: a.priority,
             requiresKey: a.requiresKey,
             healthy: keyOk && !!c && !c.error,
             lastFetchedAt: c?.fetchedAt ?? null,
@@ -100,7 +125,11 @@ export async function fetchAdapter(adapter: CameraAdapter): Promise<CameraFeatur
         return c.data;
     }
     try {
-        const data = await adapter.fetch();
+        const data = await withTimeout(
+            adapter.fetch(),
+            DEFAULT_FETCH_TIMEOUT_MS,
+            adapter.displayName,
+        );
         cache.set(adapter.id, {
             data,
             expiry: now + ttl,

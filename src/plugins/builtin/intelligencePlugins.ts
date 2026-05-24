@@ -15,7 +15,7 @@ import { FlockObservationDetail } from "./FlockObservationDetail";
 
 export const SAMPLE_INTELLIGENCE_PLUGIN_ID = "sample-intelligence";
 
-export const DEFAULT_VISIBLE_PLUGIN_IDS = [SAMPLE_INTELLIGENCE_PLUGIN_ID] as const;
+export const DEFAULT_VISIBLE_PLUGIN_IDS = [SAMPLE_INTELLIGENCE_PLUGIN_ID, "camera"] as const;
 
 const BUILT_IN_PLUGIN_IDS = [
     SAMPLE_INTELLIGENCE_PLUGIN_ID,
@@ -117,6 +117,8 @@ const CAMERA_SOURCE_COLORS: Record<string, string> = {
     "chart-md": "#fb7185",
     ohgo: "#2dd4bf",
     fl511: "#facc15",
+    "fl511-public": "#84cc16",
+    "tn-smartway": "#f97316",
     unknown: "#a855f7",
 };
 
@@ -477,6 +479,8 @@ function createCameraPlugin(): WorldPlugin {
             return [
                 { label: "Caltrans", color: CAMERA_SOURCE_COLORS.caltrans },
                 { label: "GDOT", color: CAMERA_SOURCE_COLORS.gdot },
+                { label: "FL511 Public", color: CAMERA_SOURCE_COLORS["fl511-public"] },
+                { label: "TDOT SmartWay", color: CAMERA_SOURCE_COLORS["tn-smartway"] },
                 { label: "Maryland CHART", color: CAMERA_SOURCE_COLORS["chart-md"] },
                 { label: "511NY", color: CAMERA_SOURCE_COLORS.ny511 },
                 { label: "TfL", color: CAMERA_SOURCE_COLORS.tfl },

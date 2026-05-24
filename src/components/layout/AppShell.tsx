@@ -73,14 +73,21 @@ export function AppShell() {
 
             // Fetch disabled built-in plugins before registration
             let disabledIds = new Set<string>();
+            let disabledBuiltinsTimeout: number | undefined;
             try {
-                const res = await fetch("/api/marketplace/disabled-builtins");
+                const controller = new AbortController();
+                disabledBuiltinsTimeout = window.setTimeout(() => controller.abort(), 2500);
+                const res = await fetch("/api/marketplace/disabled-builtins", {
+                    signal: controller.signal,
+                });
                 if (res.ok) {
                     const data = await res.json();
                     disabledIds = new Set<string>(data.disabledIds ?? []);
                 }
             } catch {
-                // Non-critical — load all built-ins if endpoint fails
+                // Non-critical - load all built-ins if endpoint fails
+            } finally {
+                if (disabledBuiltinsTimeout) window.clearTimeout(disabledBuiltinsTimeout);
             }
 
             // Setup demo defaults
@@ -115,7 +122,7 @@ export function AppShell() {
 
         // Start boot sequence when globe tiles are loaded
         const unsubGlobe = dataBus.on("globeReady", () => {
-            console.log("[AppShell] Globe ready — starting boot sequence.");
+            console.log("[AppShell] Globe ready - starting boot sequence.");
             boot.startBoot();
         });
 

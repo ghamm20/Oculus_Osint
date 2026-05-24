@@ -36,6 +36,15 @@ interface FaaWeatherSite {
     cameras?: FaaWeatherCamera[];
 }
 
+interface WeatherCameraFeature {
+    type: "Feature";
+    properties: Record<string, unknown>;
+    geometry: {
+        type: "Point";
+        coordinates: [number, number, number];
+    };
+}
+
 function finiteNumber(value: unknown): number | undefined {
     if (typeof value === "number" && Number.isFinite(value)) return value;
     if (typeof value === "string" && value.trim()) {
@@ -72,7 +81,7 @@ export async function GET() {
 
         const data = await response.json();
         const sites = Array.isArray(data?.payload) ? data.payload as FaaWeatherSite[] : [];
-        const features = [];
+        const features: WeatherCameraFeature[] = [];
 
         for (const site of sites) {
             if (site.siteActive === false || site.siteInMaintenance) continue;
@@ -88,7 +97,8 @@ export async function GET() {
                 const lon = finiteNumber(camera.longitude) ?? siteLon;
                 if (lat === undefined || lon === undefined) continue;
 
-                const cameraId = String(camera.cameraId ?? `${site.siteId}-${features.length}`);
+                const fallbackCameraId = `${site.siteId ?? "site"}-${features.length}`;
+                const cameraId = String(camera.cameraId ?? fallbackCameraId);
                 const siteId = String(camera.siteId ?? site.siteId ?? "unknown-site");
 
                 features.push({
