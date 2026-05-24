@@ -10,6 +10,7 @@ import type {
     WorldPlugin,
 } from "@/core/plugins/PluginTypes";
 import { pluginRegistry } from "@/core/plugins/PluginRegistry";
+import { CitizenIncidentDetail } from "./CitizenIncidentDetail";
 
 export const SAMPLE_INTELLIGENCE_PLUGIN_ID = "sample-intelligence";
 
@@ -623,6 +624,9 @@ export function registerBuiltInIntelligencePlugins(): void {
                     { label: "Elevated", color: CITIZEN_SEVERITY_COLORS.elevated },
                     { label: "Low", color: CITIZEN_SEVERITY_COLORS.low },
                 ];
+            },
+            getDetailComponent() {
+                return CitizenIncidentDetail;
             },
         },
     ];
