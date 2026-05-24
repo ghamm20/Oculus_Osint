@@ -15,6 +15,7 @@ import { ImportPanel } from "@/plugins/geojson/ImportPanel";
 import { PluginsTab } from "./PluginsTab";
 import { OculusAnalystPanel } from "./OculusAnalystPanel";
 import { CameraSourcesPanel } from "./CameraSourcesPanel";
+import { ArgosLivePanel } from "./ArgosLivePanel";
 import "@/plugins/geojson/geojson-importer.css";
 import { trackEvent } from "@/lib/analytics";
 
@@ -126,7 +127,7 @@ export function LayerPanel() {
         trackEvent("sample-layer-load", { source: "layer-panel" });
     };
 
-    const [activeTab, setActiveTab] = useState<"layers" | "sources" | "imagery" | "favorites" | "import" | "plugins" | "assistant">("layers");
+    const [activeTab, setActiveTab] = useState<"layers" | "sources" | "argos" | "imagery" | "favorites" | "import" | "plugins" | "assistant">("layers");
     const fontSize = "13px";
 
     return (
@@ -181,6 +182,14 @@ export function LayerPanel() {
                     style={{width: buttonWidth}}
                 >
                     <Camera size="20" style={{margin: 5, maxHeight: "20%"}} />
+                </button>
+                <button
+                    className={`panel-tab ${activeTab === "argos" ? "panel-tab--active" : ""}`}
+                    onClick={() => { setActiveTab("argos"); trackEvent("panel-tab-switch", { tab: "argos-live" }); }}
+                    title="ARGOS Live Sources"
+                    style={{width: buttonWidth}}
+                >
+                    <Radar size="20" style={{margin: 5, maxHeight: "20%"}} />
                 </button>
                 <button
                     className={`panel-tab ${activeTab === "imagery" ? "panel-tab--active" : ""}`}
@@ -321,6 +330,10 @@ export function LayerPanel() {
 
             {activeTab === "sources" && (
                 <CameraSourcesPanel />
+            )}
+
+            {activeTab === "argos" && (
+                <ArgosLivePanel />
             )}
 
             {activeTab === "favorites" && (

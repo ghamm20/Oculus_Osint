@@ -86,6 +86,29 @@ model Setting {
 }
 
 // NEW — Global workspace registry
+model Stream {
+  id               String   @id @default(uuid())
+  title            String
+  protocol         String
+  sourceUrl        String   @map("source_url")
+  thumbnailUrl     String?  @map("thumbnail_url")
+  lat              Float?
+  lon              Float?
+  tags             Json     @default("[]")
+  provider         String
+  authRequired     Boolean  @default(false) @map("auth_required")
+  refreshRate      Int      @default(30) @map("refresh_rate")
+  healthStatus     String   @default("offline") @map("health_status")
+  lastSeen         DateTime @default(now()) @map("last_seen")
+  capabilitiesJson Json     @default("{}") @map("capabilities_json")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@index([provider])
+  @@index([healthStatus])
+  @@map("streams")
+}
+
 model Workspace {
   id                   String             @id @default(uuid())
   name                 String

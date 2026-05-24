@@ -12,10 +12,11 @@ import type {
 import { pluginRegistry } from "@/core/plugins/PluginRegistry";
 import { CitizenIncidentDetail } from "./CitizenIncidentDetail";
 import { FlockObservationDetail } from "./FlockObservationDetail";
+import { ArgosEntityDetail } from "./ArgosEntityDetail";
 
 export const SAMPLE_INTELLIGENCE_PLUGIN_ID = "sample-intelligence";
 
-export const DEFAULT_VISIBLE_PLUGIN_IDS = [SAMPLE_INTELLIGENCE_PLUGIN_ID, "camera"] as const;
+export const DEFAULT_VISIBLE_PLUGIN_IDS = [SAMPLE_INTELLIGENCE_PLUGIN_ID, "camera", "argos-live"] as const;
 
 const BUILT_IN_PLUGIN_IDS = [
     SAMPLE_INTELLIGENCE_PLUGIN_ID,
@@ -28,6 +29,7 @@ const BUILT_IN_PLUGIN_IDS = [
     "satellite",
     "citizen",
     "flock",
+    "argos-live",
 ] as const;
 
 const SAMPLE_ENTITIES: Array<Omit<GeoEntity, "timestamp">> = [
@@ -153,6 +155,15 @@ const FLOCK_COLORS = {
     observation: "#0ea5e9",
     alert: "#ef4444",
     masked: "#64748b",
+};
+
+const ARGOS_COLORS: Record<string, string> = {
+    webcam: "#38bdf8",
+    traffic_camera: "#a3e635",
+    audio: "#f97316",
+    ais: "#22c55e",
+    blocked: "#64748b",
+    unknown: "#a855f7",
 };
 
 type FeatureLike = {
@@ -308,6 +319,38 @@ function mapCameraPayload(data: unknown, maxEntities?: number): GeoEntity[] {
                 ...properties,
                 source,
                 sourcePlugin: "camera",
+            },
+        });
+
+        if (maxEntities && entities.length >= maxEntities) break;
+    }
+
+    return entities;
+}
+
+function mapArgosPayload(data: unknown, maxEntities?: number): GeoEntity[] {
+    const payload = getRecord(data);
+    const items = Array.isArray(payload.items) ? payload.items as Array<Record<string, unknown>> : [];
+    const entities: GeoEntity[] = [];
+
+    for (let index = 0; index < items.length; index += 1) {
+        const item = items[index];
+        const latitude = getFiniteNumber(item.lat);
+        const longitude = getFiniteNumber(item.lon);
+        if (latitude === undefined || longitude === undefined) continue;
+
+        const id = getString(item.id) ?? `argos-${index}`;
+        const title = getString(item.title) ?? id;
+        entities.push({
+            id,
+            pluginId: "argos-live",
+            latitude,
+            longitude,
+            timestamp: getTimestamp(item.last_checked),
+            label: title,
+            properties: {
+                ...item,
+                sourcePlugin: "argos-live",
             },
         });
 
@@ -492,6 +535,96 @@ function createCameraPlugin(): WorldPlugin {
     };
 }
 
+function createArgosPlugin(): WorldPlugin {
+    const config: ApiPluginConfig = {
+        id: "argos-live",
+        name: "ARGOS Live Public Sensors",
+        description: "Public/open camera, traffic, audio, and AIS source catalog with safe live/source handoff.",
+        endpoint: "/api/live-sources/catalog?limit=5000",
+        icon: "Radio",
+        category: "intelligence",
+        color: "#38bdf8",
+        intervalMs: 180_000,
+        pointSize: 10,
+        maxEntities: 5000,
+    };
+
+    return {
+        ...createGeoJsonApiPlugin(config),
+        async fetch() {
+            const response = await fetch(config.endpoint, {
+                headers: { Accept: "application/json" },
+            });
+
+            if (!response.ok) {
+                throw new Error(`${config.name} returned ${response.status}`);
+            }
+
+            const data = await response.json();
+            return mapArgosPayload(data, config.maxEntities);
+        },
+        getLayerConfig() {
+            return {
+                color: config.color,
+                clusterEnabled: true,
+                clusterDistance: 72,
+                maxEntities: config.maxEntities,
+            };
+        },
+        renderEntity(entity) {
+            const type = getString(entity.properties.type)?.toLowerCase() ?? "unknown";
+            const legal = getString(entity.properties.legal_status);
+            return renderPoint(
+                entity,
+                legal === "blocked" ? ARGOS_COLORS.blocked : (ARGOS_COLORS[type] ?? ARGOS_COLORS.unknown),
+                legal === "blocked" ? 8 : config.pointSize,
+                false,
+            );
+        },
+        getLegend() {
+            return [
+                { label: "Webcam", color: ARGOS_COLORS.webcam },
+                { label: "Traffic", color: ARGOS_COLORS.traffic_camera },
+                { label: "Audio", color: ARGOS_COLORS.audio },
+                { label: "AIS", color: ARGOS_COLORS.ais },
+                { label: "Blocked", color: ARGOS_COLORS.blocked },
+            ];
+        },
+        getFilterDefinitions() {
+            return [
+                {
+                    id: "argos-type",
+                    label: "ARGOS Type",
+                    type: "select",
+                    propertyKey: "type",
+                    options: [
+                        { value: "webcam", label: "Webcam" },
+                        { value: "traffic_camera", label: "Traffic" },
+                        { value: "audio", label: "Audio" },
+                        { value: "ais", label: "AIS" },
+                        { value: "blocked", label: "Blocked" },
+                    ],
+                },
+                {
+                    id: "argos-legal",
+                    label: "Legal Status",
+                    type: "select",
+                    propertyKey: "legal_status",
+                    options: [
+                        { value: "approved", label: "Approved" },
+                        { value: "api_required", label: "API Required" },
+                        { value: "blocked", label: "Blocked" },
+                        { value: "unknown", label: "Unknown" },
+                    ],
+                },
+            ];
+        },
+        getDetailComponent() {
+            return ArgosEntityDetail;
+        },
+    };
+}
+
 export function isBuiltInIntelligencePlugin(pluginId: string): boolean {
     return (BUILT_IN_PLUGIN_IDS as readonly string[]).includes(pluginId);
 }
@@ -548,6 +681,7 @@ export function registerBuiltInIntelligencePlugins(): void {
             showLabels: true,
         }),
         createCameraPlugin(),
+        createArgosPlugin(),
         {
             ...createGeoJsonApiPlugin({
                 id: "weather-camera",
