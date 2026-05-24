@@ -26,7 +26,7 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               // CesiumJS requires unsafe-eval (worker compilation) and unsafe-inline (styles)
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: https://unpkg.com https://cdn.jsdelivr.net https://analytics.worldwideview.dev https://va.vercel-scripts.com https://static.cloudflareinsights.com",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: https://unpkg.com https://cdn.jsdelivr.net",
               "style-src 'self' 'unsafe-inline' fonts.googleapis.com",
               "font-src 'self' fonts.gstatic.com",
               // Camera streams load images/MJPEG from arbitrary IPs worldwide — http: https: required
@@ -66,7 +66,6 @@ const nextConfig: NextConfig = {
     config.ignoreWarnings = [
       { module: /node_modules[\\/]@opentelemetry/ },
       { module: /node_modules[\\/]require-in-the-middle/ },
-      { module: /node_modules[\\/]@sentry/ },
     ];
 
     if (!isServer) {
@@ -92,7 +91,5 @@ const nextConfig: NextConfig = {
     return config;
   },
 };
-
-import { withSentryConfig } from "@sentry/nextjs";
 
 export default nextConfig;

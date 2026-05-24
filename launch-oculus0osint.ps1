@@ -1,10 +1,10 @@
 $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$port = "3011"
+$port = "3010"
 $url = "http://localhost:$port"
 $logDir = Join-Path $repoRoot "logs"
-$logFile = Join-Path $logDir "desktop-launch-3011.log"
+$logFile = Join-Path $logDir "desktop-launch-3010.log"
 
 if (-not (Test-Path -LiteralPath $logDir)) {
     New-Item -ItemType Directory -Path $logDir | Out-Null
@@ -29,10 +29,11 @@ if (Test-PortOpen -Port $port) {
     exit 0
 }
 
+# Local edition is the doctrine. Do NOT override with demo here —
+# demo disables auth, history, and settings.
 $env:PORT = $port
 $env:HOSTNAME = "0.0.0.0"
-$env:NEXT_PUBLIC_WWV_EDITION = "demo"
-$env:NEXT_PUBLIC_DEMO_DEFAULT_PLUGINS = "sample-intelligence"
+$env:NEXT_PUBLIC_WWV_EDITION = "local"
 
 Write-Host "Starting Oculus0Osint on $url ..."
 Write-Host "Repo: $repoRoot"
@@ -42,8 +43,7 @@ $serverCommand = @"
 Set-Location -LiteralPath '$repoRoot'
 `$env:PORT='$port'
 `$env:HOSTNAME='0.0.0.0'
-`$env:NEXT_PUBLIC_WWV_EDITION='demo'
-`$env:NEXT_PUBLIC_DEMO_DEFAULT_PLUGINS='sample-intelligence'
+`$env:NEXT_PUBLIC_WWV_EDITION='local'
 corepack pnpm start *>> '$logFile'
 "@
 

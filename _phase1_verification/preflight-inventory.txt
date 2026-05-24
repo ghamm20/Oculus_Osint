@@ -1,0 +1,92 @@
+PHASE 1 PRE-FLIGHT INVENTORY
+Captured: 2026-05-24
+Working tree: C:\AI\OCULUSBOUND\Oculus-osint-main
+
+--------------------------------------------------------------------
+GIT
+--------------------------------------------------------------------
+branch:           main
+remote tracking:  origin/main (up to date)
+working tree:     clean
+head commit:      9b61189 "Clarify ARGOS video feed selection"
+recent commits:   ARGOS feed resolver, ARGOS NRT sensor fusion, ARGOS
+                  public sensor layer, public camera source, Windows
+                  desktop launcher, Flock ALPR ingest, Citizen ingest,
+                  public camera + satellite feeds, full DOT camera feed.
+
+--------------------------------------------------------------------
+EDITION ENV
+--------------------------------------------------------------------
+.env.local      NEXT_PUBLIC_WWV_EDITION=local                  OK
+.env            NEXT_PUBLIC_WWV_EDITION=local                  OK
+launch script   NEXT_PUBLIC_WWV_EDITION=demo  (FORCE OVERRIDE) MISMATCH
+                file: launch-oculus0osint.ps1
+                This is the file that caused the previous bogus
+                "passing" screenshot. Must be corrected.
+
+--------------------------------------------------------------------
+PORT CONFIG (sticky port)
+--------------------------------------------------------------------
+launch-oculus0osint.ps1     port = 3011                    NOT 3010
+docker-compose.yml          host 3000 -> container 3000    legacy
+deploy/cloud/docker-compose host 3001 -> container 3000    cloud preset
+Dockerfile (HEALTHCHECK)    localhost:3000                 internal
+.vscode/launch.json         http://localhost:3000          dev-attach
+
+No file currently pins port 3010. Doctrine calls for 3010 sticky.
+Phase 1 will move launch-oculus0osint.ps1 to 3010 and drop the demo
+override.
+
+--------------------------------------------------------------------
+PNPM ALLOWED BUILDS
+--------------------------------------------------------------------
+Source: pnpm-workspace.yaml -> allowBuilds
+  @prisma/engines: true        keep   (Prisma native engines)
+  @sentry/cli:     true        REMOVE (phones home on install)
+  esbuild:         true        keep   (vitest / build toolchain)
+  prisma:          true        keep   (Prisma CLI)
+  protobufjs:      true        keep   (transitive via Cesium 1.141)
+  sharp:           true        keep   (Next.js image optimization)
+
+approve-builds queue: empty (all decisions already in workspace yaml).
+
+--------------------------------------------------------------------
+OUTBOUND-NETWORK DEPENDENCIES IN package.json
+--------------------------------------------------------------------
+@sentry/nextjs            ^10.52.0    REMOVE (phase 1 target)
+@vercel/analytics         ^1.6.1      REMOVE (phase 1 target)
+stripe                    ^22.1.1     LEAVE  (dormant unless keyed)
+@supabase/supabase-js     ^2.105.4    LEAVE  (dormant unless keyed)
+@auth/supabase-adapter    ^1.11.2     LEAVE  (auth adapter, dormant)
+
+Sentry import surface (6 files):
+  src/sentry.client.config.ts        DELETE
+  src/sentry.server.config.ts        DELETE
+  src/sentry.edge.config.ts          DELETE
+  src/instrumentation.ts             REWRITE (drop Sentry imports)
+  src/app/global-error.tsx           REWRITE (remove Sentry capture)
+  src/app/api/marketplace/load/route.ts  EDIT (drop captureMessage)
+  src/app/api/glitchtip-tunnel/route.ts  DELETE (Sentry tunnel)
+  next.config.ts                     EDIT (drop withSentryConfig)
+
+Vercel Analytics import surface (1 file):
+  src/app/layout.tsx                 EDIT (drop <Analytics/> + import)
+
+CSP also references analytics.worldwideview.dev,
+va.vercel-scripts.com, static.cloudflareinsights.com. Those are
+script-src allowances, not active requests. Will tidy as part of
+the Sentry/Vercel strip since they exist only to authorize those
+loaders.
+
+--------------------------------------------------------------------
+SUMMARY OF EDITS REQUIRED IN PHASE 1
+--------------------------------------------------------------------
+1. launch-oculus0osint.ps1   port 3010, drop demo override
+2. pnpm-workspace.yaml       remove @sentry/cli from allowBuilds
+3. package.json              uninstall @sentry/nextjs, @vercel/analytics
+4. Delete: src/sentry.*.config.ts, src/app/api/glitchtip-tunnel/route.ts
+5. Edit:   src/instrumentation.ts, src/app/global-error.tsx,
+           src/app/api/marketplace/load/route.ts,
+           src/app/layout.tsx, next.config.ts
+6. Postgres up via docker-compose, prisma generate + db push
+7. /setup walkthrough -> create single owner account

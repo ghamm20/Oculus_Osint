@@ -1,14 +1,8 @@
-import * as Sentry from "@sentry/nextjs";
-
 export async function register() {
-  if (process.env.NEXT_RUNTIME === "nodejs") {
-    await import("./sentry.server.config");
-  }
-
-  if (process.env.NEXT_RUNTIME === "edge") {
-    await import("./sentry.edge.config");
-  }
+  // Sentry instrumentation removed (sovereign posture, Phase 1).
+  // Local-only telemetry hooks belong here if/when added.
 }
 
-// Capture errors from Server Components, middleware, and proxies
-export const onRequestError = Sentry.captureRequestError;
+export function onRequestError() {
+  // No-op: errors are surfaced via Next.js logs only.
+}

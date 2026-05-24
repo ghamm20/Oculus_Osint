@@ -65,6 +65,7 @@ yarn-error.log*
 /logs/*.jsonl
 /logs/*.log
 /logs/*.png
+/logs/*.err
 !/logs/.gitkeep
 
 # env files (can opt-in for committing if needed)

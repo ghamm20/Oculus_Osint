@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import "@/styles/hud-animations.css";
 
@@ -41,14 +40,6 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning>
         {children}
-        {process.env.VERCEL && <Analytics />}
-        {process.env.NEXT_PUBLIC_WWV_ANALYTICS === "true" && (
-          <Script
-            src="https://analytics.worldwideview.dev/script.js"
-            data-website-id="2c8f6c09-2651-4a2a-af99-b8cee1612b9a"
-            strategy="afterInteractive"
-          />
-        )}
       </body>
     </html>
   );

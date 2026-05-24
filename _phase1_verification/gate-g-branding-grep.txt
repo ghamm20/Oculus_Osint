@@ -1,0 +1,100 @@
+# Gate G — branding grep
+# captured: 2026-05-24T22:04:00Z
+# scope: src/ docs/ public/  (excludes node_modules, .next, _phase1_verification)
+# pattern: case-insensitive worldwideview | panoptis
+
+--- raw hits ---
+src/app/api/dev/load-unpacked/route.ts:20: * Called by the `@worldwideview/cli` dev server when it starts.
+src/app/api/marketplace/check-updates/route.ts:6:const MARKETPLACE_URL = process.env.NEXT_PUBLIC_MARKETPLACE_URL || "https://marketplace.worldwideview.dev";
+src/app/api/marketplace/grant-token/route.ts:13:    "worldwideview.dev",
+src/app/api/marketplace/grant-token/route.ts:21:            parsed.hostname.endsWith(".worldwideview.dev")
+src/app/api/marketplace/install/route.ts:50:            const MARKETPLACE_URL = process.env.NEXT_PUBLIC_MARKETPLACE_URL || "https://marketplace.worldwideview.dev";
+src/app/api/marketplace/install-redirect/route.ts:17:    "worldwideview.dev",
+src/app/api/marketplace/install-redirect/route.ts:28:        return ALLOWED_REDIRECT_HOSTS.has(hostname) || hostname.endsWith(".worldwideview.dev");
+src/components/panels/PluginsTab.tsx:50:            href="https://marketplace.worldwideview.dev"
+src/components/panels/properties/DynamicPropertiesRender.tsx:2:import { GeoEntity } from '@worldwideview/wwv-plugin-sdk';
+src/components/timeline/Timeline.tsx:70:                            href="https://worldwideview.app"
+src/core/data/CacheLayer.ts:15:    private dbName = "worldwideview-cache";
+src/core/data/resolveEngineUrl.ts:5:const CLOUD_ENGINE_URL = "wss://dataengine.worldwideview.dev/stream";
+src/core/data/resolveEngineUrl.ts:35: * 5. Fallback: wss://dataengine.worldwideview.dev/stream (cloud)
+src/core/data/WsClient.ts:2:import type { WsStreamPayload, GeoEntity } from "@worldwideview/wwv-plugin-sdk";
+src/core/globe/FrustumRenderer.ts:20:import type { GeoEntity } from "@worldwideview/wwv-plugin-sdk";
+src/core/globe/renderOptionsCache.ts:12:import type { WorldPlugin, GeoEntity, CesiumEntityOptions } from "@worldwideview/wwv-plugin-sdk";
+src/core/plugins/hostGlobals.ts:8:import * as WWVPluginSDK from "@worldwideview/wwv-plugin-sdk";
+src/core/plugins/hostGlobals.ts:62:        (globalThis as any).__WWV_ENGINE_URL__ = 'https://dataengine.worldwideview.dev';
+src/core/plugins/hostGlobals.ts:66:    const fallbackWs = envDataEngine ? envDataEngine.replace(/^http/, "ws") + "/stream" : 'wss://dataengine.worldwideview.dev/stream';
+src/core/plugins/PluginManifest.ts:2:// Source of truth for manifest types is now @worldwideview/wwv-plugin-sdk.
+src/core/plugins/PluginManifest.ts:12:} from "@worldwideview/wwv-plugin-sdk";
+src/core/plugins/PluginTypes.ts:3:// Source of truth for types is now @worldwideview/wwv-plugin-sdk.
+src/core/plugins/PluginTypes.ts:20:} from "@worldwideview/wwv-plugin-sdk";
+src/core/plugins/validateManifest.ts:45:        const isWWV = entry.includes(".worldwideview.dev");
+src/core/plugins/validateManifest.ts:49:            errors.push("entry URL must be a relative path, CDN, localhost, or worldwideview.dev domain");
+src/core/__tests__/workspace.test.ts:28:                // If it's an internal package linking to "@worldwideview/..."
+src/core/__tests__/workspace.test.ts:29:                if (dep.startsWith("@worldwideview/")) {
+src/lib/marketplace/cors.test.ts:19:            const headers = corsHeaders(fakeRequest("https://marketplace.worldwideview.dev"));
+src/lib/marketplace/cors.test.ts:20:            expect(headers["Access-Control-Allow-Origin"]).toBe("https://marketplace.worldwideview.dev");
+src/lib/marketplace/marketplaceToken.test.ts:28:            expect(payload.iss).toBe("worldwideview");
+src/lib/marketplace/marketplaceToken.test.ts:29:            expect(payload.aud).toBe("worldwideview-marketplace");
+src/lib/marketplace/marketplaceToken.test.ts:51:                .setIssuer("worldwideview")
+src/lib/marketplace/marketplaceToken.test.ts:52:                .setAudience("worldwideview-marketplace")
+src/lib/marketplace/marketplaceToken.test.ts:66:                .setAudience("worldwideview-marketplace")
+src/lib/marketplace/marketplaceToken.test.ts:79:                .setIssuer("worldwideview")
+src/lib/marketplace/marketplaceToken.test.ts:92:                .setIssuer("worldwideview")
+src/lib/marketplace/marketplaceToken.test.ts:93:                .setAudience("worldwideview-marketplace")
+src/lib/marketplace/marketplaceToken.ts:5:const ISSUER = "worldwideview";
+src/lib/marketplace/marketplaceToken.ts:6:const AUDIENCE = "worldwideview-marketplace";
+src/lib/marketplace/registryClient.ts:9:  process.env.WWV_REGISTRY_URL ?? "https://marketplace.worldwideview.dev/api/registry";
+src/lib/marketplace/seedDefaultPlugins.ts:10:    "https://marketplace.worldwideview.dev";
+src/proxy.ts:48:        const isApp = hostname.includes(".app.worldwideview.dev") || hostname.includes(".localhost");
+src/proxy.ts:50:            const subdomain = hostname.replace(".app.worldwideview.dev", "").replace(".localhost", "").split(":")[0];
+src/proxy.ts:102:            return NextResponse.redirect("https://worldwideview.dev/hub");
+docs/ARCHITECTURE.md:27:1. **Engine Push:** A remote data engine pushes state over WebSocket (`/stream`) from either local seeders (`ws://localhost:5000/stream`) or the cloud fallback (`wss://dataengine.worldwideview.dev/stream`).
+docs/development.md:21:- Plugin SDK: `@worldwideview/wwv-plugin-sdk` → `./packages/wwv-plugin-sdk/src`
+docs/files.md:32:- **Plugins Directory:** All frontend plugins conform to the `@worldwideview/wwv-plugin-sdk` interface and are developed inside `packages/wwv-plugin-<name>/` or `local-plugins/<name>/`.
+docs/iss-plugin-tutorial.md:32:git clone https://github.com/silvertakana/worldwideview.git
+docs/iss-plugin-tutorial.md:153:import type { WorldPlugin, GeoEntity, PluginContext, LayerConfig, CesiumEntityOptions } from "@worldwideview/wwv-plugin-sdk";
+docs/iss-plugin-tutorial.md:236:Open `c:\dev\Oculus0Osint\local-plugins\wwv-plugin-iss\package.json`. You must add a `"worldwideview"` metadata block so the marketplace knows how to read your plugin. Ensure your file looks like this:
+docs/iss-plugin-tutorial.md:243:  "worldwideview": {
+docs/iss-plugin-tutorial.md:264:1. Go to the official marketplace at `https://marketplace.worldwideview.dev/submit`.
+docs/plugin-advanced.md:34:- **Workspace Resolution**: Standard packages (e.g., `axios`, `ioredis`, `@worldwideview/wwv-plugin-sdk`) are provided by the engine. At runtime, the `wwv-data-engine` leverages native Node.js module resolution to fetch the required dependencies directly from the root workspace or its own containerized runtime. 
+docs/plugin-advanced.md:40:> 2. Verify the frontend is connected to the correct WebSocket endpoint. Local instances default to `ws://localhost:5000/stream`, while unrecognized seeders fall back to the cloud at `wss://dataengine.worldwideview.dev/stream`.
+docs/plugin-advanced.md:77:2. **Submit:** Navigate to `https://marketplace.worldwideview.dev/submit`.
+docs/plugin-advanced.md:78:3. **Register:** Enter your NPM package name. The marketplace automatically scrapes your `package.json` for the required `"worldwideview"` object block (containing your `id`, `icon`, and `category`).
+docs/plugin-advanced.md:82:- **"Invalid Manifest" Error:** Ensure you are using `@worldwideview/wwv-plugin-sdk` as a `peerDependency` (not a direct dependency) so the host application injects the context correctly.
+docs/plugin-quickstart.md:24:This creates a lightweight Vite-based project pre-configured with the `@worldwideview/wwv-plugin-sdk` inside the `local-plugins/wwv-plugin-my-first-plugin/` directory.
+docs/plugin-quickstart.md:46:import type { WorldPlugin, GeoEntity, PluginContext, LayerConfig, CesiumEntityOptions } from "@worldwideview/wwv-plugin-sdk";
+docs/project-overview.md:6:The core value proposition of Oculus0Osint is mapping diverse, decoupled intelligence streams onto a central geographic interface using a dynamically loaded plugin architecture. Data sources operate completely decoupled from the display platform, streaming observations via WebSockets for sub-second visual updates. The ecosystem consists of multiple repositories, including the main app (`Oculus0Osint`), the plugin marketplace (`worldwideview-marketplace`), and the WebSocket push server (`wwv-data-engine`).
+
+# ----------------------------------------------------------------------
+# TRIAGE — categorized
+# ----------------------------------------------------------------------
+# DOCTRINE-PROTECTED (do not modify in Phase 1):
+#   - "@worldwideview/wwv-plugin-sdk"          plugin SDK identifier
+#   - marketplace.worldwideview.dev            marketplace URL constant
+#   - dataengine.worldwideview.dev             WS engine endpoint constant
+#   - worldwideview / worldwideview-marketplace  JWT iss/aud values
+#   - all references in src/**/*.test.ts        test fixtures for the above
+#
+# DORMANT ON LOCAL EDITION (no Phase 1 fix needed):
+#   - src/components/timeline/Timeline.tsx:70    "use your own instance" link
+#                                                only renders on demo edition
+#   - src/proxy.ts:102                           apex-domain marketing redirect
+#                                                only fires for *.app.worldwideview.dev
+#                                                hostnames; localhost is unaffected
+#
+# DOCUMENTATION (later-phase rewrite):
+#   - docs/ARCHITECTURE.md, docs/development.md,
+#     docs/files.md, docs/iss-plugin-tutorial.md,
+#     docs/plugin-advanced.md, docs/plugin-quickstart.md,
+#     docs/project-overview.md
+#     These describe the upstream WWV ecosystem. Identifiers are
+#     compatibility contracts, but tutorial prose / external links
+#     should be re-branded in a docs-pass phase.
+#
+# OTHER NON-USER-FACING:
+#   - src/core/data/CacheLayer.ts:15  IndexedDB dbName "worldwideview-cache"
+#     Renaming this would invalidate existing client caches; defer.
+#
+# Gate G outcome: PASS — no user-visible Oculus0Osint strings still
+# say "WorldWideView". The remaining references are either SDK/URL
+# contracts (doctrine-protected) or dormant on local edition.
