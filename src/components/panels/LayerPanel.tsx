@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertCircle, BrainCircuit, Camera, CircuitBoard, DownloadCloud, Globe2, Puzzle, Radar, Search, Star } from "lucide-react";
 
 import { useStore } from "@/core/state/store";
@@ -29,6 +29,7 @@ export function LayerPanel() {
     const layers = useStore((s) => s.layers);
     const entitiesByPlugin = useStore((s) => s.entitiesByPlugin);
     const highlightLayerId = useStore((s) => s.highlightLayerId);
+    const selectedEntity = useStore((s) => s.selectedEntity);
     const setHighlightLayerId = useStore((s) => s.setHighlightLayerId);
     const setConfigPanelOpen = useStore((s) => s.setConfigPanelOpen);
     const setActiveConfigTab = useStore((s) => s.setActiveConfigTab);
@@ -129,6 +130,10 @@ export function LayerPanel() {
 
     const [activeTab, setActiveTab] = useState<"layers" | "sources" | "argos" | "imagery" | "favorites" | "import" | "plugins" | "assistant">("layers");
     const fontSize = "13px";
+
+    useEffect(() => {
+        if (selectedEntity?.pluginId === "argos-live") setActiveTab("argos");
+    }, [selectedEntity]);
 
     return (
         <aside

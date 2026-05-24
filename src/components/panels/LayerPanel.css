@@ -1279,6 +1279,330 @@
     box-shadow: 0 18px 45px rgba(2, 6, 23, 0.45);
 }
 
+.argos-feed-panel,
+.argos-feed-wall-panel {
+    border: 1px solid rgba(56, 189, 248, 0.18);
+    border-radius: 7px;
+    padding: 10px;
+    background: rgba(8, 47, 73, 0.14);
+}
+
+.argos-feed-panel__header,
+.argos-feed-panel__actions,
+.argos-feed-wall__header,
+.argos-feed-wall__toggle,
+.argos-feed-card__topline,
+.argos-feed-panel__notice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.argos-feed-panel__header,
+.argos-feed-wall__header {
+    justify-content: space-between;
+}
+
+.argos-feed-panel__header strong {
+    display: block;
+    margin-top: 4px;
+    max-width: 220px;
+    overflow: hidden;
+    color: #f8fafc;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.argos-feed-panel__status {
+    flex: 0 0 auto;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 999px;
+    padding: 4px 8px;
+    color: #cbd5e1;
+    background: rgba(15, 23, 42, 0.62);
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.argos-feed-panel__status--playable {
+    color: #bbf7d0;
+    border-color: rgba(34, 197, 94, 0.32);
+}
+
+.argos-feed-panel__status--source-page-only,
+.argos-feed-panel__status--api-required {
+    color: #fde68a;
+    border-color: rgba(251, 191, 36, 0.32);
+}
+
+.argos-feed-panel__status--blocked,
+.argos-feed-panel__status--unavailable {
+    color: #fecaca;
+    border-color: rgba(248, 113, 113, 0.28);
+}
+
+.argos-feed-panel__media {
+    position: relative;
+    min-height: 190px;
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 7px;
+    background: #020617;
+}
+
+.argos-feed-panel__media iframe,
+.argos-feed-panel__media img,
+.argos-feed-panel__media video {
+    width: 100%;
+    min-height: 190px;
+    border: 0;
+    object-fit: contain;
+    background: #020617;
+}
+
+.argos-audio-player {
+    display: grid;
+    place-content: center;
+    gap: 14px;
+    min-height: 190px;
+    padding: 14px;
+    color: #e2e8f0;
+}
+
+.argos-audio-player audio {
+    width: min(100%, 320px);
+}
+
+.argos-feed-panel__overlay {
+    position: absolute;
+    inset: auto 10px 10px 10px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    border: 1px solid rgba(251, 191, 36, 0.28);
+    border-radius: 7px;
+    padding: 8px;
+    color: #fde68a;
+    background: rgba(15, 23, 42, 0.86);
+    font-size: 11px;
+}
+
+.argos-feed-panel__actions {
+    flex-wrap: wrap;
+}
+
+.argos-feed-panel__actions button,
+.argos-feed-wall__filters button {
+    min-height: 31px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 7px;
+    padding: 0 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: #cbd5e1;
+    background: rgba(15, 23, 42, 0.54);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.argos-feed-panel__actions button:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+}
+
+.argos-feed-panel__notice {
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    border-radius: 7px;
+    padding: 7px 9px;
+    color: #bbf7d0;
+    background: rgba(22, 163, 74, 0.13);
+    font-size: 11px;
+}
+
+.argos-feed-panel__diagnostics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.argos-feed-panel__diagnostics > div {
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 7px;
+    padding: 7px;
+    background: rgba(2, 6, 23, 0.38);
+}
+
+.argos-feed-panel__diagnostics small,
+.argos-feed-panel__diagnostics strong {
+    display: block;
+}
+
+.argos-feed-panel__diagnostics small {
+    color: #94a3b8;
+    font-size: 9px;
+    text-transform: uppercase;
+}
+
+.argos-feed-panel__diagnostics strong {
+    margin-top: 3px;
+    overflow-wrap: anywhere;
+    color: #f8fafc;
+    font-size: 10px;
+}
+
+.argos-feed-wall__header small,
+.argos-feed-wall__toggle {
+    color: #94a3b8;
+    font-size: 10px;
+}
+
+.argos-feed-wall__toggle input {
+    flex: 0 0 auto;
+}
+
+.argos-feed-wall__filters {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.argos-feed-wall__classes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.argos-feed-wall__classes span {
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 999px;
+    padding: 3px 7px;
+    color: #94a3b8;
+    background: rgba(2, 6, 23, 0.32);
+    font-size: 9px;
+    text-transform: uppercase;
+}
+
+.argos-feed-wall {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.argos-feed-card {
+    min-width: 0;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 7px;
+    padding: 7px;
+    color: #e2e8f0;
+    text-align: left;
+    background: rgba(2, 6, 23, 0.42);
+}
+
+.argos-feed-card--active {
+    border-color: rgba(56, 189, 248, 0.48);
+    background: rgba(14, 165, 233, 0.12);
+}
+
+.argos-feed-card--playable {
+    border-color: rgba(34, 197, 94, 0.22);
+}
+
+.argos-feed-card--blocked,
+.argos-feed-card--unavailable {
+    border-color: rgba(248, 113, 113, 0.22);
+}
+
+.argos-feed-card__preview {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 6px;
+    background: #020617;
+}
+
+.argos-feed-card__preview img,
+.argos-feed-card__preview audio {
+    width: 100%;
+}
+
+.argos-feed-card__preview img {
+    height: 100%;
+    object-fit: cover;
+}
+
+.argos-feed-card__preview > div {
+    display: grid;
+    place-items: center;
+    gap: 5px;
+    color: #94a3b8;
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.argos-feed-card__topline {
+    justify-content: space-between;
+    margin-top: 7px;
+}
+
+.argos-feed-card__topline small,
+.argos-feed-card__topline em {
+    border-radius: 999px;
+    padding: 2px 6px;
+    font-size: 9px;
+    font-style: normal;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.argos-feed-card__topline small {
+    color: #bae6fd;
+    background: rgba(14, 165, 233, 0.14);
+}
+
+.argos-feed-card__topline em {
+    color: #cbd5e1;
+    background: rgba(148, 163, 184, 0.14);
+}
+
+.argos-feed-card strong,
+.argos-feed-card small {
+    display: block;
+    margin-top: 5px;
+}
+
+.argos-feed-card strong {
+    overflow: hidden;
+    color: #f8fafc;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.argos-feed-card small {
+    overflow-wrap: anywhere;
+    color: #94a3b8;
+    font-size: 10px;
+}
+
+.argos-feed-empty {
+    grid-column: 1 / -1;
+    display: grid;
+    place-items: center;
+    gap: 6px;
+    min-height: 120px;
+    border: 1px dashed rgba(148, 163, 184, 0.24);
+    border-radius: 7px;
+    padding: 12px;
+    color: #94a3b8;
+    text-align: center;
+    font-size: 11px;
+}
+
 .argos-panel button:disabled {
     cursor: not-allowed;
     opacity: 0.48;

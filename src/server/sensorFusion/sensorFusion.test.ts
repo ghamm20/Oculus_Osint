@@ -14,6 +14,7 @@ import { buildOperatorBrief } from "./intelligenceCompressor";
 import { replayStore } from "./replayStore";
 import { filterEntities } from "./query";
 import { getSensorProvider, listSensorProviders, normalizeLiveSourceItem, validateStream } from "./providerRegistry";
+import { resolveFeed, resolverClassSummary } from "./feedResolver";
 import type { EvidenceEntity, SensorEvent, SensorProviderHealth } from "./streamSchema";
 
 function entity(overrides: Partial<EvidenceEntity> = {}): EvidenceEntity {
@@ -198,6 +199,85 @@ describe("ARGOS NRT sensor fusion", () => {
         expect(result.ok).toBe(false);
         expect(result.health_status).toBe("unsupported_codec");
         expect(result.capabilities_json.notes).toContain("unsupported_or_unknown_protocol");
+    });
+
+    it("feed resolver classifies iframe embeds", () => {
+        const feed = resolveFeed(entity({ embed_url: "https://example.test/embed", thumbnail_url: "https://example.test/thumb.jpg" }));
+        expect(feed.method).toBe("iframe_embed");
+        expect(feed.status).toBe("playable");
+        expect(feed.diagnostics.can_iframe).toBe(true);
+    });
+
+    it("feed resolver classifies HLS video", () => {
+        const feed = resolveFeed(entity({ live_url: "https://example.test/live/master.m3u8" }));
+        expect(feed.method).toBe("hls_video");
+        expect(feed.status).toBe("playable");
+        expect(feed.diagnostics.can_play_hls).toBe(true);
+    });
+
+    it("feed resolver classifies MJPEG image streams", () => {
+        const feed = resolveFeed(entity({ live_url: "https://example.test/axis-cgi/mjpg/video.cgi" }));
+        expect(feed.method).toBe("mjpeg_video");
+        expect(feed.status).toBe("playable");
+        expect(feed.diagnostics.can_play_mjpeg).toBe(true);
+    });
+
+    it("feed resolver classifies snapshot-only feeds", () => {
+        const feed = resolveFeed(entity({ live_url: "https://example.test/camera/snapshot.jpg" }));
+        expect(feed.method).toBe("snapshot_only");
+        expect(feed.status).toBe("playable");
+        expect(feed.actions.can_show_thumbnail).toBe(true);
+    });
+
+    it("feed resolver classifies audio streams", () => {
+        const feed = resolveFeed(entity({ source_type: "audio", live_url: "https://example.test/audio/live.wav" }));
+        expect(feed.method).toBe("audio_stream");
+        expect(feed.status).toBe("playable");
+        expect(feed.diagnostics.audio_playable).toBe(true);
+    });
+
+    it("feed resolver classifies source-page-only feeds", () => {
+        const feed = resolveFeed(entity({ source_page_url: "https://example.test/source", live_url: null, embed_url: null, thumbnail_url: null }));
+        expect(feed.method).toBe("source_page_only");
+        expect(feed.status).toBe("source-page-only");
+        expect(feed.actions.can_open_source).toBe(true);
+    });
+
+    it("feed resolver classifies blocked feeds without playable URLs", () => {
+        const feed = resolveFeed(entity({ source_type: "blocked", legal_status: "blocked" }));
+        expect(feed.method).toBe("blocked");
+        expect(feed.status).toBe("blocked");
+        expect(feed.playable).toBe(false);
+    });
+
+    it("feed resolver classifies unavailable feeds with exact reason", () => {
+        const feed = resolveFeed(entity({ source_page_url: "", live_url: null, embed_url: null, thumbnail_url: null }));
+        expect(feed.method).toBe("unavailable");
+        expect(feed.status).toBe("unavailable");
+        expect(feed.failure_reason).toMatch(/No live URL/);
+    });
+
+    it("feed resolver classifies RTSP feeds as proxy-required", () => {
+        const feed = resolveFeed(entity({ live_url: "rtsp://example.invalid/stream" }));
+        expect(feed.method).toBe("rtsp_proxy_required");
+        expect(feed.status).toBe("unavailable");
+        expect(feed.failure_reason).toMatch(/proxy/i);
+    });
+
+    it("demo feed catalog includes every resolver class for UI verification", async () => {
+        const items = sampleArgosEntities().map((item) => normalizeLiveSourceItem(item, item.refresh_seconds));
+        const feeds = items.map((item) => resolveFeed(item));
+        const classes = resolverClassSummary(feeds);
+        expect(classes.iframe_embed.total).toBeGreaterThan(0);
+        expect(classes.hls_video.total).toBeGreaterThan(0);
+        expect(classes.mjpeg_video.total).toBeGreaterThan(0);
+        expect(classes.snapshot_only.total).toBeGreaterThanOrEqual(5);
+        expect(classes.audio_stream.total).toBeGreaterThan(0);
+        expect(classes.source_page_only.total).toBeGreaterThanOrEqual(3);
+        expect(classes.rtsp_proxy_required.total).toBeGreaterThan(0);
+        expect(classes.unavailable.total).toBeGreaterThan(0);
+        expect(classes.blocked.total).toBeGreaterThan(0);
+        expect(feeds.filter((feed) => feed.source_type === "audio").length).toBeGreaterThanOrEqual(3);
     });
 
     it("frontend ARGOS plugin receives entities and renders map markers", async () => {

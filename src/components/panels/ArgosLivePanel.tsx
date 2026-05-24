@@ -6,6 +6,7 @@ import {
     AlertTriangle,
     CheckCircle2,
     Clock,
+    Copy,
     ExternalLink,
     Eye,
     KeyRound,
@@ -173,6 +174,62 @@ interface StreamValidation {
     diagnostics: Record<string, unknown>;
 }
 
+type FeedMethod =
+    | "iframe_embed"
+    | "hls_video"
+    | "mjpeg_video"
+    | "rtsp_proxy_required"
+    | "snapshot_only"
+    | "audio_stream"
+    | "source_page_only"
+    | "unavailable"
+    | "blocked";
+type FeedStatus = "playable" | "source-page-only" | "unavailable" | "blocked" | "api-required";
+type FeedWallMode = "camera" | "audio" | "mixed";
+type FeedWallFilter = "all" | "video" | "audio" | "snapshot" | "source-page" | "blocked" | "failed";
+
+interface FeedResolution {
+    entity_id: string;
+    provider: string;
+    source_type: SensorSourceType;
+    title: string;
+    method: FeedMethod;
+    status: FeedStatus;
+    playable: boolean;
+    viewable: boolean;
+    live_url: string | null;
+    embed_url: string | null;
+    thumbnail_url: string | null;
+    snapshot_url: string | null;
+    source_page_url: string | null;
+    player_url: string | null;
+    copy_url: string | null;
+    requires_user_click: boolean;
+    legal_status: LegalStatus;
+    failure_reason: string | null;
+    actions: {
+        can_play_live: boolean;
+        can_listen_live: boolean;
+        can_open_source: boolean;
+        can_copy_source: boolean;
+        can_show_thumbnail: boolean;
+    };
+    diagnostics: {
+        has_live_url: boolean;
+        has_embed_url: boolean;
+        has_thumbnail: boolean;
+        can_iframe: boolean;
+        can_play_hls: boolean;
+        can_play_mjpeg: boolean;
+        audio_playable: boolean;
+        source_page_available: boolean;
+        last_tested: string;
+        test_result: string;
+        failure_reason: string | null;
+    };
+    entity: EvidenceEntity;
+}
+
 const TYPE_LABELS: Record<SensorSourceType, string> = {
     webcam: "Webcam",
     traffic_camera: "Traffic",
@@ -225,6 +282,40 @@ const TIME_WINDOWS: Record<TimeWindow, number> = {
 };
 
 const ALL_FILTER_TYPES = Object.keys(TYPE_LABELS) as SensorSourceType[];
+const FEED_WALL_FILTERS: Array<{ id: FeedWallFilter; label: string }> = [
+    { id: "all", label: "All" },
+    { id: "video", label: "Video" },
+    { id: "audio", label: "Audio" },
+    { id: "snapshot", label: "Snapshot" },
+    { id: "source-page", label: "Source Page" },
+    { id: "blocked", label: "Blocked" },
+    { id: "failed", label: "Failed" },
+];
+
+function isDemoFeed(feed: FeedResolution): boolean {
+    return feed.entity.tags.includes("demo") || feed.entity.diagnostics?.sample === true || feed.title.toUpperCase().includes("DEMO");
+}
+
+function feedClassLabel(method: FeedMethod): string {
+    return method.replace(/_/g, " ");
+}
+
+function feedWallMatches(feed: FeedResolution, filter: FeedWallFilter): boolean {
+    if (filter === "all") return true;
+    if (filter === "video") return ["iframe_embed", "hls_video", "mjpeg_video"].includes(feed.method);
+    if (filter === "audio") return feed.method === "audio_stream" || feed.source_type === "audio";
+    if (filter === "snapshot") return feed.method === "snapshot_only";
+    if (filter === "source-page") return feed.status === "source-page-only" || feed.status === "api-required";
+    if (filter === "blocked") return feed.status === "blocked";
+    return feed.status === "unavailable" || feed.method === "rtsp_proxy_required" || feed.method === "unavailable";
+}
+
+function selectedToEvidenceEntity(selected: any): EvidenceEntity | null {
+    if (!selected || selected.pluginId !== "argos-live") return null;
+    const candidate = selected.properties as Partial<EvidenceEntity> | undefined;
+    if (!candidate || typeof candidate.id !== "string" || typeof candidate.provider !== "string" || typeof candidate.source_type !== "string") return null;
+    return candidate as EvidenceEntity;
+}
 
 function locationLabel(item: EvidenceEntity): string {
     const city = typeof item.raw.city === "string" ? item.raw.city : null;
@@ -303,6 +394,53 @@ function VideoPreview({ item }: { item: EvidenceEntity }) {
     return <img src={url} alt={item.title} />;
 }
 
+function HlsFeedPlayer({ feed }: { feed: FeedResolution }) {
+    const [message, setMessage] = useState<string | null>(null);
+    return (
+        <>
+            <HlsPlayer
+                src={feed.live_url ?? ""}
+                onReady={() => setMessage(null)}
+                onError={(nextMessage) => setMessage(nextMessage)}
+            />
+            {message && (
+                <div className="argos-feed-panel__overlay">
+                    <AlertTriangle size={15} />
+                    <span>{message}</span>
+                </div>
+            )}
+        </>
+    );
+}
+
+function FeedPlayer({ feed }: { feed: FeedResolution }) {
+    if (feed.method === "iframe_embed" && feed.player_url) {
+        return <iframe src={feed.player_url} title={feed.title} allow="fullscreen; autoplay; picture-in-picture" loading="lazy" />;
+    }
+    if (feed.method === "hls_video" && feed.live_url) return <HlsFeedPlayer feed={feed} />;
+    if ((feed.method === "mjpeg_video" || feed.method === "snapshot_only") && (feed.snapshot_url || feed.live_url)) {
+        return <img src={feed.snapshot_url ?? feed.live_url ?? ""} alt={feed.title} />;
+    }
+    if (feed.method === "audio_stream" && feed.live_url) {
+        return (
+            <div className="argos-audio-player">
+                <strong>{feed.title}</strong>
+                <audio controls src={feed.live_url} />
+            </div>
+        );
+    }
+    return (
+        <div className="argos-live-view__empty">
+            <ShieldAlert size={18} />
+            <span>{feed.failure_reason ?? "Feed unavailable"}</span>
+        </div>
+    );
+}
+
+function feedLocation(feed: FeedResolution): string {
+    return locationLabel(feed.entity);
+}
+
 export function ArgosLivePanel() {
     const [providers, setProviders] = useState<ProviderHealth[]>([]);
     const [items, setItems] = useState<EvidenceEntity[]>([]);
@@ -321,7 +459,15 @@ export function ArgosLivePanel() {
     const [viewMode, setViewMode] = useState<ViewMode>("globe");
     const [activeItem, setActiveItem] = useState<EvidenceEntity | null>(null);
     const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({});
-    const [liveViewItem, setLiveViewItem] = useState<EvidenceEntity | null>(null);
+    const [activeFeed, setActiveFeed] = useState<FeedResolution | null>(null);
+    const [feedWall, setFeedWall] = useState<FeedResolution[]>([]);
+    const [feedWallMode, setFeedWallMode] = useState<FeedWallMode>("mixed");
+    const [feedWallFilter, setFeedWallFilter] = useState<FeedWallFilter>("all");
+    const [onlyPlayableFeeds, setOnlyPlayableFeeds] = useState(false);
+    const [liveViewFeed, setLiveViewFeed] = useState<FeedResolution | null>(null);
+    const [feedLoading, setFeedLoading] = useState(false);
+    const [feedError, setFeedError] = useState<string | null>(null);
+    const [copyNotice, setCopyNotice] = useState<string | null>(null);
     const [streamUrl, setStreamUrl] = useState("");
     const [streamTitle, setStreamTitle] = useState("");
     const [streamLat, setStreamLat] = useState("");
@@ -332,6 +478,7 @@ export function ArgosLivePanel() {
     const [error, setError] = useState<string | null>(null);
     const argosEnabled = useStore((s) => s.layers["argos-live"]?.enabled ?? false);
     const argosEntities = useStore((s) => s.entitiesByPlugin["argos-live"] ?? []);
+    const selectedEntity = useStore((s) => s.selectedEntity);
 
     const syncEntitiesToMap = useCallback((nextItems: EvidenceEntity[]) => {
         const entities = nextItems.map(toMapEntity).filter((entity): entity is NonNullable<ReturnType<typeof toMapEntity>> => !!entity);
@@ -339,6 +486,26 @@ export function ArgosLivePanel() {
         state.setEntities("argos-live", entities);
         state.setEntityCount("argos-live", entities.length);
         state.initLayer("argos-live", true);
+    }, []);
+
+    const resolveFeedForItem = useCallback(async (item: EvidenceEntity): Promise<FeedResolution | null> => {
+        setFeedLoading(true);
+        setFeedError(null);
+        try {
+            const response = await fetch(`/api/feeds/${encodeURIComponent(item.id)}/resolve`, { cache: "no-store" });
+            const payload = await response.json();
+            if (!response.ok) throw new Error(payload?.error ?? `Feed resolver returned ${response.status}`);
+            const feed = payload.feed as FeedResolution;
+            setActiveFeed(feed);
+            return feed;
+        } catch (err: any) {
+            const message = err?.message ?? String(err);
+            setFeedError(message);
+            setActiveFeed(null);
+            return null;
+        } finally {
+            setFeedLoading(false);
+        }
     }, []);
 
     const refreshSnapshot = useCallback(async (force = false) => {
@@ -349,7 +516,7 @@ export function ArgosLivePanel() {
                 const refreshResponse = await fetch("/api/sensors/refresh", { method: "POST", cache: "no-store" });
                 if (!refreshResponse.ok) throw new Error(`ARGOS refresh returned ${refreshResponse.status}`);
             }
-            const [healthResponse, entitiesResponse, activityResponse, briefResponse, anomalyResponse, correlationResponse, narrativeResponse] = await Promise.all([
+            const [healthResponse, entitiesResponse, activityResponse, briefResponse, anomalyResponse, correlationResponse, narrativeResponse, feedWallResponse] = await Promise.all([
                 fetch("/api/sensors/health", { cache: "no-store" }),
                 fetch("/api/sensors/entities?limit=10000", { cache: "no-store" }),
                 fetch("/api/sensors/events/recent?limit=80", { cache: "no-store" }),
@@ -357,9 +524,11 @@ export function ArgosLivePanel() {
                 fetch("/api/sensors/anomalies", { cache: "no-store" }),
                 fetch("/api/sensors/correlations", { cache: "no-store" }),
                 fetch(`/api/sensors/narrative?mode=${encodeURIComponent(operatorMode)}`, { cache: "no-store" }),
+                fetch("/api/feeds/playable?include_all=1", { cache: "no-store" }),
             ]);
             if (!healthResponse.ok) throw new Error(`ARGOS health returned ${healthResponse.status}`);
             if (!entitiesResponse.ok) throw new Error(`ARGOS entities returned ${entitiesResponse.status}`);
+            if (!feedWallResponse.ok) throw new Error(`ARGOS feed wall returned ${feedWallResponse.status}`);
             const health = await healthResponse.json();
             const entityPayload = await entitiesResponse.json();
             const activityPayload = await activityResponse.json();
@@ -367,10 +536,12 @@ export function ArgosLivePanel() {
             const anomalyPayload = await anomalyResponse.json();
             const correlationPayload = await correlationResponse.json();
             const narrativePayload = await narrativeResponse.json();
+            const feedWallPayload = await feedWallResponse.json();
             const nextProviders = Array.isArray(health.providers) ? health.providers as ProviderHealth[] : [];
             const nextItems = Array.isArray(entityPayload.entities) ? entityPayload.entities as EvidenceEntity[] : [];
             setProviders(nextProviders);
             setItems(nextItems);
+            setFeedWall(Array.isArray(feedWallPayload.feeds) ? feedWallPayload.feeds as FeedResolution[] : []);
             syncEntitiesToMap(nextItems);
             setActivity(Array.isArray(activityPayload.events) ? activityPayload.events as SensorEvent[] : []);
             setBrief(briefPayload.brief ?? null);
@@ -395,6 +566,20 @@ export function ArgosLivePanel() {
     useEffect(() => {
         void refreshSnapshot(true);
     }, [refreshSnapshot]);
+
+    useEffect(() => {
+        const selectedArgosEntity = selectedToEvidenceEntity(selectedEntity);
+        if (!selectedArgosEntity) return;
+        setActiveItem(selectedArgosEntity);
+    }, [selectedEntity]);
+
+    useEffect(() => {
+        if (!activeItem) {
+            setActiveFeed(null);
+            return;
+        }
+        void resolveFeedForItem(activeItem);
+    }, [activeItem, resolveFeedForItem]);
 
     useEffect(() => {
         const source = new EventSource("/api/sensors/events/live");
@@ -454,12 +639,27 @@ export function ArgosLivePanel() {
         return {
             visible: filteredItems.length,
             mapped: filteredItems.filter((item) => item.lat !== null && item.lon !== null).length,
-            playable: filteredItems.filter((item) => item.live_url || item.embed_url).length,
+            playable: feedWall.filter((feed) => feed.status === "playable").length,
             stale: filteredItems.filter((item) => item.status === "stale" || item.freshness_score < 0.2).length,
             high: filteredItems.filter((item) => item.severity === "high" || item.severity === "critical").length,
             counts,
         };
-    }, [filteredItems]);
+    }, [feedWall, filteredItems]);
+
+    const feedWallItems = useMemo(() => {
+        return feedWall.filter((feed) => {
+            if (feedWallMode === "camera" && feed.source_type === "audio") return false;
+            if (feedWallMode === "audio" && feed.source_type !== "audio") return false;
+            if (onlyPlayableFeeds && feed.status !== "playable") return false;
+            return feedWallMatches(feed, feedWallFilter);
+        });
+    }, [feedWall, feedWallFilter, feedWallMode, onlyPlayableFeeds]);
+
+    const feedClassCounts = useMemo(() => {
+        const counts = new Map<FeedMethod, number>();
+        for (const feed of feedWall) counts.set(feed.method, (counts.get(feed.method) ?? 0) + 1);
+        return counts;
+    }, [feedWall]);
 
     const selectedCorrelations = useMemo(() => {
         const ids = Object.entries(selectedIds).filter(([, selected]) => selected).map(([id]) => id);
@@ -536,12 +736,26 @@ export function ArgosLivePanel() {
         await enableArgosLayer();
     };
 
-    const openLiveView = (item: EvidenceEntity) => {
-        if (item.legal_status !== "blocked" && (item.embed_url || item.live_url)) {
-            setLiveViewItem(item);
+    const openLiveView = async (item: EvidenceEntity) => {
+        const feed = activeFeed?.entity_id === item.id ? activeFeed : await resolveFeedForItem(item);
+        if (!feed) return;
+        if (feed.status === "playable") {
+            setLiveViewFeed(feed);
             return;
         }
-        openExternal(item.source_page_url);
+        if (feed.source_page_url) openExternal(feed.source_page_url);
+    };
+
+    const copyFeedSource = async (feed: FeedResolution | null) => {
+        if (!feed?.copy_url) return;
+        try {
+            await navigator.clipboard.writeText(feed.copy_url);
+            setCopyNotice("Source URL copied");
+            window.setTimeout(() => setCopyNotice(null), 1800);
+        } catch {
+            setCopyNotice("Copy failed");
+            window.setTimeout(() => setCopyNotice(null), 1800);
+        }
     };
 
     return (
@@ -728,6 +942,133 @@ export function ArgosLivePanel() {
                 </div>
             </div>
 
+            <div className="argos-panel__section argos-feed-panel">
+                <div className="argos-feed-panel__header">
+                    <div>
+                        <div className="argos-panel__section-title">Live Feed</div>
+                        <strong>{activeFeed?.title ?? activeItem?.title ?? "No entity selected"}</strong>
+                    </div>
+                    <span className={`argos-feed-panel__status argos-feed-panel__status--${activeFeed?.status ?? "unavailable"}`}>
+                        {feedLoading ? "testing" : activeFeed?.status ?? "unavailable"}
+                    </span>
+                </div>
+                <div className={`argos-feed-panel__media argos-feed-panel__media--${activeFeed?.method ?? "unavailable"}`}>
+                    {activeFeed ? (
+                        <FeedPlayer feed={activeFeed} />
+                    ) : (
+                        <div className="argos-live-view__empty">
+                            {feedLoading ? <Loader2 size={18} className="argos-panel__spin" /> : <ShieldAlert size={18} />}
+                            <span>{feedError ?? "Select a camera, audio feed, or live source marker to resolve it."}</span>
+                        </div>
+                    )}
+                </div>
+                {activeFeed && (
+                    <>
+                        <div className="argos-feed-panel__actions">
+                            <button type="button" onClick={() => { void openLiveView(activeFeed.entity); }} disabled={!activeFeed.actions.can_play_live && !activeFeed.actions.can_listen_live && !activeFeed.source_page_url}>
+                                <Play size={13} />
+                                <span>{activeFeed.source_type === "audio" ? "Listen Live" : activeFeed.status === "playable" ? "Play Live" : "Open Handoff"}</span>
+                            </button>
+                            <button type="button" onClick={() => openExternal(activeFeed.source_page_url)} disabled={!activeFeed.actions.can_open_source}>
+                                <ExternalLink size={13} />
+                                <span>Open Source Page</span>
+                            </button>
+                            <button type="button" onClick={() => { void copyFeedSource(activeFeed); }} disabled={!activeFeed.actions.can_copy_source}>
+                                <Copy size={13} />
+                                <span>Copy Source URL</span>
+                            </button>
+                        </div>
+                        {copyNotice && <div className="argos-feed-panel__notice">{copyNotice}</div>}
+                        <div className="argos-feed-panel__diagnostics">
+                            <div><small>class</small><strong>{feedClassLabel(activeFeed.method)}</strong></div>
+                            <div><small>has_live_url</small><strong>{String(activeFeed.diagnostics.has_live_url)}</strong></div>
+                            <div><small>has_embed_url</small><strong>{String(activeFeed.diagnostics.has_embed_url)}</strong></div>
+                            <div><small>has_thumbnail</small><strong>{String(activeFeed.diagnostics.has_thumbnail)}</strong></div>
+                            <div><small>can_iframe</small><strong>{String(activeFeed.diagnostics.can_iframe)}</strong></div>
+                            <div><small>can_play_hls</small><strong>{String(activeFeed.diagnostics.can_play_hls)}</strong></div>
+                            <div><small>can_play_mjpeg</small><strong>{String(activeFeed.diagnostics.can_play_mjpeg)}</strong></div>
+                            <div><small>audio_playable</small><strong>{String(activeFeed.diagnostics.audio_playable)}</strong></div>
+                            <div><small>source_page</small><strong>{String(activeFeed.diagnostics.source_page_available)}</strong></div>
+                            <div><small>test_result</small><strong>{activeFeed.diagnostics.test_result}</strong></div>
+                            <div><small>last_tested</small><strong>{new Date(activeFeed.diagnostics.last_tested).toLocaleTimeString()}</strong></div>
+                            <div><small>reason</small><strong>{activeFeed.failure_reason ?? "playable"}</strong></div>
+                        </div>
+                    </>
+                )}
+            </div>
+
+            <div className="argos-panel__section argos-feed-wall-panel">
+                <div className="argos-feed-wall__header">
+                    <div>
+                        <div className="argos-panel__section-title">Feed Wall</div>
+                        <small>{feedWallItems.length.toLocaleString()} shown / {feedWall.length.toLocaleString()} resolved</small>
+                    </div>
+                    <label className="argos-feed-wall__toggle">
+                        <input type="checkbox" checked={onlyPlayableFeeds} onChange={() => setOnlyPlayableFeeds((current) => !current)} />
+                        <span>Only show playable feeds</span>
+                    </label>
+                </div>
+                <div className="argos-panel__modes">
+                    {(["mixed", "camera", "audio"] as FeedWallMode[]).map((mode) => (
+                        <button key={mode} type="button" className={feedWallMode === mode ? "argos-panel__mode--active" : ""} onClick={() => setFeedWallMode(mode)}>
+                            {mode}
+                        </button>
+                    ))}
+                </div>
+                <div className="argos-feed-wall__filters">
+                    {FEED_WALL_FILTERS.map((filter) => (
+                        <button key={filter.id} type="button" className={feedWallFilter === filter.id ? "argos-panel__mode--active" : ""} onClick={() => setFeedWallFilter(filter.id)}>
+                            {filter.label}
+                        </button>
+                    ))}
+                </div>
+                <div className="argos-feed-wall__classes">
+                    {Array.from(feedClassCounts.entries()).map(([method, count]) => (
+                        <span key={method}>{feedClassLabel(method)} {count}</span>
+                    ))}
+                </div>
+                <div className={`argos-feed-wall argos-feed-wall--${feedWallFilter}`}>
+                    {feedWallItems.slice(0, 18).map((feed) => (
+                        <button
+                            key={feed.entity_id}
+                            type="button"
+                            className={`argos-feed-card argos-feed-card--${feed.status} ${activeFeed?.entity_id === feed.entity_id ? "argos-feed-card--active" : ""}`}
+                            onClick={() => {
+                                setActiveItem(feed.entity);
+                                setActiveFeed(feed);
+                            }}
+                        >
+                            <div className="argos-feed-card__preview">
+                                {feed.method === "audio_stream" ? (
+                                    <audio controls src={feed.live_url ?? undefined} onClick={(event) => event.stopPropagation()} />
+                                ) : (feed.snapshot_url || feed.thumbnail_url || feed.live_url) && feed.method !== "hls_video" ? (
+                                    <img src={feed.snapshot_url ?? feed.thumbnail_url ?? feed.live_url ?? ""} alt={feed.title} />
+                                ) : (
+                                    <div>
+                                        <Radio size={16} />
+                                        <span>{feedClassLabel(feed.method)}</span>
+                                    </div>
+                                )}
+                            </div>
+                            <span className="argos-feed-card__topline">
+                                <small>{isDemoFeed(feed) ? "DEMO" : feed.provider}</small>
+                                <em>{feed.status === "playable" ? "Playable" : feed.status === "source-page-only" || feed.status === "api-required" ? "Source Page" : feed.status}</em>
+                            </span>
+                            <strong>{feed.title}</strong>
+                            <small>{feedLocation(feed)}</small>
+                            <small>{feed.failure_reason ?? feedClassLabel(feed.method)}</small>
+                        </button>
+                    ))}
+                    {feedWallItems.length === 0 && (
+                        <div className="argos-feed-empty">
+                            <ShieldAlert size={18} />
+                            <span>No feeds match this wall filter.</span>
+                            <small>{onlyPlayableFeeds ? "Only playable feeds is on. Try All or Source Page to inspect handoff-only feeds." : "Providers returned no items for this resolver class."}</small>
+                        </div>
+                    )}
+                </div>
+            </div>
+
             <div className="argos-panel__section">
                 <div className="argos-panel__section-title">Live Items</div>
                 <div className={`argos-item-list argos-item-list--${viewMode}`}>
@@ -788,7 +1129,7 @@ export function ArgosLivePanel() {
                         <div><small>trust</small><strong>{(activeItem.trust_score * 100).toFixed(0)}%</strong></div>
                     </div>
                     <div className="argos-focus__actions">
-                        <button type="button" onClick={() => openLiveView(activeItem)}>
+                        <button type="button" onClick={() => { void openLiveView(activeItem); }}>
                             <Play size={13} />
                             <span>Open Live View</span>
                         </button>
@@ -813,14 +1154,14 @@ export function ArgosLivePanel() {
                 <span>RF Sentinel placeholder: occupancy, density heatmap, movement flow, dwell time, and sensor health schema only.</span>
             </div>
 
-            {liveViewItem && (
+            {liveViewFeed && (
                 <div className={`argos-live-view ${viewMode === "pip" ? "argos-live-view--pip" : ""}`}>
                     <div className="argos-live-view__header">
-                        <span>{liveViewItem.title}</span>
-                        <button type="button" onClick={() => setLiveViewItem(null)}>Close</button>
+                        <span>{liveViewFeed.title}</span>
+                        <button type="button" onClick={() => setLiveViewFeed(null)}>Close</button>
                     </div>
                     <div className="argos-live-view__media">
-                        <VideoPreview item={liveViewItem} />
+                        <FeedPlayer feed={liveViewFeed} />
                     </div>
                 </div>
             )}

@@ -374,6 +374,29 @@ class UserStreamsProvider extends BaseProvider {
     }
 }
 
+class BlockedInsecamProvider extends StaticStatusProvider {
+    constructor() {
+        super(
+            "blocked-insecam",
+            "Blocked Insecam Directory",
+            "blocked",
+            false,
+            "https://www.insecam.org/",
+            "blocked",
+            "Blocked by design. ARGOS will not ingest exposed camera directories or return playable URLs.",
+            "blocked",
+        );
+    }
+
+    async fetch_catalog(): Promise<ArgosEntity[]> {
+        return sampleArgosEntities().filter((item) => item.provider === "blocked-insecam");
+    }
+
+    normalize_item(raw?: unknown): ArgosEntity | null {
+        return raw && typeof raw === "object" ? raw as ArgosEntity : null;
+    }
+}
+
 export const liveSourceProviders: LiveSourceProvider[] = [
     new ArgosDemoProvider(),
     new Fl511Provider(),
@@ -440,16 +463,7 @@ export const liveSourceProviders: LiveSourceProvider[] = [
         "AccessAIS is historical/order-based data, not a real-time AIS stream. Live AIS endpoint reports unavailable honestly.",
         "approved",
     ),
-    new StaticStatusProvider(
-        "blocked-insecam",
-        "Blocked Insecam Directory",
-        "blocked",
-        false,
-        "https://www.insecam.org/",
-        "blocked",
-        "Blocked by design. ARGOS will not ingest exposed camera directories or return playable URLs.",
-        "blocked",
-    ),
+    new BlockedInsecamProvider(),
 ];
 
 export function getProvider(providerId: string): LiveSourceProvider | undefined {
