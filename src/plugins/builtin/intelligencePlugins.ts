@@ -11,6 +11,7 @@ import type {
 } from "@/core/plugins/PluginTypes";
 import { pluginRegistry } from "@/core/plugins/PluginRegistry";
 import { CitizenIncidentDetail } from "./CitizenIncidentDetail";
+import { FlockObservationDetail } from "./FlockObservationDetail";
 
 export const SAMPLE_INTELLIGENCE_PLUGIN_ID = "sample-intelligence";
 
@@ -26,6 +27,7 @@ const BUILT_IN_PLUGIN_IDS = [
     "weather-camera",
     "satellite",
     "citizen",
+    "flock",
 ] as const;
 
 const SAMPLE_ENTITIES: Array<Omit<GeoEntity, "timestamp">> = [
@@ -143,6 +145,12 @@ const CITIZEN_SEVERITY_COLORS: Record<string, string> = {
     medium: "#f59e0b",
     low: "#facc15",
     unknown: "#f43f5e",
+};
+
+const FLOCK_COLORS = {
+    observation: "#0ea5e9",
+    alert: "#ef4444",
+    masked: "#64748b",
 };
 
 type FeatureLike = {
@@ -627,6 +635,34 @@ export function registerBuiltInIntelligencePlugins(): void {
             },
             getDetailComponent() {
                 return CitizenIncidentDetail;
+            },
+        },
+        {
+            ...createGeoJsonApiPlugin({
+                id: "flock",
+                name: "Flock Authorized Feed",
+                description: "Authorized ALPR observations and alerts from configured Flock exports.",
+                endpoint: "/api/flock",
+                icon: "ScanLine",
+                category: "intelligence",
+                color: FLOCK_COLORS.observation,
+                intervalMs: 60_000,
+                pointSize: 10,
+                maxEntities: 5000,
+            }),
+            renderEntity(entity) {
+                const isAlert = entity.properties.hotlistHit === true;
+                return renderPoint(entity, isAlert ? FLOCK_COLORS.alert : FLOCK_COLORS.observation, isAlert ? 13 : 10, false);
+            },
+            getLegend() {
+                return [
+                    { label: "ALPR observation", color: FLOCK_COLORS.observation },
+                    { label: "ALPR alert", color: FLOCK_COLORS.alert },
+                    { label: "Masked plate", color: FLOCK_COLORS.masked },
+                ];
+            },
+            getDetailComponent() {
+                return FlockObservationDetail;
             },
         },
     ];
