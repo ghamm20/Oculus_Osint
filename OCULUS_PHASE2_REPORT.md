@@ -208,4 +208,8 @@ Phase 3 then either:
 
 ## 9. Commit
 
-(SHA stamped at end after commit)
+- Commit SHA: `20bcd47`
+- Branch: `main`
+- Subject: `phase 2: plugin mirror — replace unpkg.com with same-origin static mirror`
+- Push status: **not pushed**. Awaiting owner approval.
+- Diff: 73 files, +520,937 / -3. The big number is almost entirely the 29 plugin bundles (compiled JS) and the 30 manifest JSON files now living in `public/wwv-mirror/`.
