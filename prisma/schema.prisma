@@ -109,6 +109,188 @@ model Stream {
   @@map("streams")
 }
 
+model SensorProviderRecord {
+  id                     String   @id
+  displayName            String   @map("display_name")
+  sourceType             String   @map("source_type")
+  requiresApiKey         Boolean  @default(false) @map("requires_api_key")
+  termsUrl               String?  @map("terms_url")
+  minRefreshSeconds      Int      @default(60) @map("min_refresh_seconds")
+  rateLimitPolicy        Json     @default("{}") @map("rate_limit_policy")
+  failurePolicy          Json     @default("{}") @map("failure_policy")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  @@map("providers")
+}
+
+model SensorEntity {
+  id                String   @id
+  sourceId          String   @map("source_id")
+  provider          String
+  sourceType        String   @map("source_type")
+  title             String
+  description       String?
+  lat               Float?
+  lon               Float?
+  alt               Float?
+  heading           Float?
+  speed             Float?
+  status            String?
+  severity          String?
+  confidence        Float
+  trustScore        Float    @map("trust_score")
+  freshnessScore    Float    @map("freshness_score")
+  lastSeen          DateTime @map("last_seen")
+  firstSeen         DateTime @map("first_seen")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  expiresAt         DateTime? @map("expires_at")
+  sourcePageUrl     String?  @map("source_page_url")
+  liveUrl           String?  @map("live_url")
+  embedUrl          String?  @map("embed_url")
+  thumbnailUrl      String?  @map("thumbnail_url")
+  requiresUserClick Boolean  @default(true) @map("requires_user_click")
+  legalStatus       String   @map("legal_status")
+  tags              Json     @default("[]")
+  raw               Json     @default("{}")
+  diagnostics       Json     @default("{}")
+
+  @@index([provider])
+  @@index([sourceType])
+  @@index([severity])
+  @@index([lastSeen])
+  @@map("sensor_entities")
+}
+
+model SensorEventRecord {
+  id         String   @id
+  type       String
+  entityId   String?  @map("entity_id")
+  provider   String?
+  severity   String
+  confidence Float
+  title      String
+  summary    String
+  location   String?
+  payload    Json     @default("{}")
+  createdAt  DateTime @map("created_at")
+
+  @@index([type])
+  @@index([provider])
+  @@index([createdAt])
+  @@map("sensor_events")
+}
+
+model ProviderHealthRecord {
+  providerId             String   @id @map("provider_id")
+  displayName            String   @map("display_name")
+  sourceType             String   @map("source_type")
+  health                 String
+  requiresApiKey         Boolean  @default(false) @map("requires_api_key")
+  termsUrl               String?  @map("terms_url")
+  lastRefresh            DateTime? @map("last_refresh")
+  nextRefresh            DateTime? @map("next_refresh")
+  entityCount            Int      @default(0) @map("entity_count")
+  staleCount             Int      @default(0) @map("stale_count")
+  refreshIntervalSeconds Int      @default(60) @map("refresh_interval_seconds")
+  errorState             String?  @map("error_state")
+  message                String
+  diagnostics            Json     @default("{}")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  @@index([health])
+  @@map("provider_health")
+}
+
+model CorrelationRecord {
+  id                 String   @id
+  title              String
+  summary            String
+  entities           Json     @default("[]")
+  bbox               Json?
+  timeStart          DateTime @map("time_start")
+  timeEnd            DateTime @map("time_end")
+  confidence         Float
+  severity           String
+  reasoningSummary   String   @map("reasoning_summary")
+  recommendedAction  String   @map("recommended_action")
+  createdAt          DateTime @map("created_at")
+
+  @@index([severity])
+  @@index([createdAt])
+  @@map("correlations")
+}
+
+model AnomalyRecord {
+  id          String   @id
+  title       String
+  summary     String
+  entities    Json     @default("[]")
+  provider    String?
+  severity    String
+  confidence  Float
+  ruleId      String   @map("rule_id")
+  heuristic   Boolean  @default(true)
+  diagnostics Json     @default("{}")
+  createdAt   DateTime @map("created_at")
+
+  @@index([provider])
+  @@index([severity])
+  @@index([createdAt])
+  @@map("anomalies")
+}
+
+model OperatorBriefRecord {
+  id                  String   @id @default(uuid())
+  mode                String
+  generatedAt         DateTime @map("generated_at")
+  topItems            Json     @default("[]") @map("top_items")
+  sourceHealthSummary Json     @default("{}") @map("source_health_summary")
+  staleDataWarning    String?  @map("stale_data_warning")
+
+  @@index([mode])
+  @@index([generatedAt])
+  @@map("operator_briefs")
+}
+
+model ReplayUpdateRecord {
+  id         String   @id
+  entityId   String   @map("entity_id")
+  provider   String
+  type       String
+  recordedAt DateTime @map("recorded_at")
+  entity     Json?
+  event      Json     @default("{}")
+
+  @@index([provider])
+  @@index([type])
+  @@index([recordedAt])
+  @@map("replay_updates")
+}
+
+model UserStreamRecord {
+  id               String   @id
+  title            String
+  protocol         String
+  sourceUrl        String   @map("source_url")
+  thumbnailUrl     String?  @map("thumbnail_url")
+  lat              Float?
+  lon              Float?
+  tags             Json     @default("[]")
+  provider         String   @default("user-streams")
+  authRequired     Boolean  @default(false) @map("auth_required")
+  refreshRate      Int      @default(30) @map("refresh_rate")
+  healthStatus     String   @default("offline") @map("health_status")
+  lastSeen         DateTime @default(now()) @map("last_seen")
+  capabilitiesJson Json     @default("{}") @map("capabilities_json")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@index([provider])
+  @@index([healthStatus])
+  @@map("user_streams")
+}
+
 model Workspace {
   id                   String             @id @default(uuid())
   name                 String

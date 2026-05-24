@@ -1003,3 +1003,283 @@
     background: rgba(2, 6, 23, 0.55);
     font-size: 10px;
 }
+
+.argos-panel__stats--five {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.argos-panel__stats--five span {
+    font-size: 15px;
+}
+
+.argos-action-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.argos-mode-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.argos-mode-grid button {
+    min-height: 31px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 7px;
+    color: #cbd5e1;
+    background: rgba(15, 23, 42, 0.54);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.argos-panel__modes {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.argos-provider {
+    flex-wrap: wrap;
+}
+
+.argos-provider__error {
+    flex-basis: 100%;
+    color: #fecaca;
+    font-size: 10px;
+}
+
+.argos-provider--zero_entities,
+.argos-provider--degraded,
+.argos-provider--unavailable {
+    border-color: rgba(251, 191, 36, 0.28);
+}
+
+.argos-brief,
+.argos-activity-list,
+.argos-correlation-box,
+.argos-rf-placeholder {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.argos-brief {
+    border: 1px solid rgba(56, 189, 248, 0.16);
+    border-radius: 7px;
+    padding: 9px;
+    background: rgba(8, 47, 73, 0.16);
+}
+
+.argos-brief__header,
+.argos-item__topline,
+.argos-inspector__title,
+.argos-rf-placeholder,
+.argos-correlation-box button {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.argos-brief__header {
+    justify-content: space-between;
+    color: #bae6fd;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.argos-brief__warning {
+    border: 1px solid rgba(251, 191, 36, 0.24);
+    border-radius: 7px;
+    padding: 7px;
+    color: #fde68a;
+    background: rgba(120, 53, 15, 0.22);
+    font-size: 11px;
+}
+
+.argos-brief__item,
+.argos-activity,
+.argos-correlation-box {
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 7px;
+    padding: 8px;
+    background: rgba(2, 6, 23, 0.38);
+}
+
+.argos-brief__item strong,
+.argos-brief__item span,
+.argos-brief__item small,
+.argos-brief__item em {
+    display: block;
+}
+
+.argos-brief__item strong {
+    color: #f8fafc;
+    font-size: 12px;
+}
+
+.argos-brief__item span,
+.argos-brief__item small,
+.argos-brief__item em {
+    margin-top: 4px;
+    color: #cbd5e1;
+    font-size: 11px;
+}
+
+.argos-brief__item em {
+    color: #93c5fd;
+    font-style: normal;
+}
+
+.argos-severity--critical,
+.argos-severity--high {
+    border-color: rgba(239, 68, 68, 0.32);
+}
+
+.argos-severity--medium {
+    border-color: rgba(249, 115, 22, 0.28);
+}
+
+.argos-severity--low {
+    border-color: rgba(250, 204, 21, 0.24);
+}
+
+.argos-activity {
+    width: 100%;
+    min-height: 42px;
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+    gap: 4px 7px;
+    color: #e2e8f0;
+    text-align: left;
+}
+
+.argos-activity span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 11px;
+}
+
+.argos-activity small {
+    grid-column: 2;
+    color: #94a3b8;
+    font-size: 10px;
+}
+
+.argos-empty-line {
+    border: 1px dashed rgba(148, 163, 184, 0.2);
+    border-radius: 7px;
+    padding: 8px;
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+.argos-item__topline {
+    width: 100%;
+}
+
+.argos-item__topline input {
+    flex: 0 0 auto;
+}
+
+.argos-item--stale {
+    opacity: 0.62;
+    filter: grayscale(0.35);
+}
+
+.argos-inspector__title strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.argos-inspector-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.argos-inspector-grid > div {
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 7px;
+    padding: 7px;
+    background: rgba(2, 6, 23, 0.34);
+}
+
+.argos-inspector-grid small,
+.argos-inspector-grid strong {
+    display: block;
+}
+
+.argos-inspector-grid small {
+    color: #94a3b8;
+    font-size: 9px;
+    text-transform: uppercase;
+}
+
+.argos-inspector-grid strong {
+    margin-top: 3px;
+    color: #f8fafc;
+    font-size: 11px;
+}
+
+.argos-raw-preview {
+    max-height: 170px;
+    overflow: auto;
+    margin: 0;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 7px;
+    padding: 8px;
+    color: #cbd5e1;
+    background: rgba(2, 6, 23, 0.58);
+    font-size: 10px;
+    white-space: pre-wrap;
+}
+
+.argos-correlation-box {
+    color: #cbd5e1;
+    font-size: 11px;
+}
+
+.argos-correlation-box button {
+    justify-content: center;
+    min-height: 31px;
+    border: 1px solid rgba(56, 189, 248, 0.22);
+    border-radius: 7px;
+    color: #bae6fd;
+    background: rgba(14, 165, 233, 0.11);
+    font-weight: 800;
+}
+
+.argos-correlation-box small {
+    color: #94a3b8;
+}
+
+.argos-panel__diagnostic--info,
+.argos-rf-placeholder {
+    border-color: rgba(56, 189, 248, 0.2);
+    color: #bae6fd;
+    background: rgba(8, 47, 73, 0.18);
+}
+
+.argos-rf-placeholder {
+    border: 1px solid rgba(192, 132, 252, 0.22);
+    border-radius: 7px;
+    padding: 8px;
+    color: #e9d5ff;
+    background: rgba(59, 7, 100, 0.16);
+    font-size: 11px;
+}
+
+.argos-live-view--pip {
+    position: sticky;
+    bottom: 8px;
+    z-index: 3;
+    box-shadow: 0 18px 45px rgba(2, 6, 23, 0.45);
+}
+
+.argos-panel button:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+}

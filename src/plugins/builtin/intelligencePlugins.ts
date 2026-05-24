@@ -162,6 +162,13 @@ const ARGOS_COLORS: Record<string, string> = {
     traffic_camera: "#a3e635",
     audio: "#f97316",
     ais: "#22c55e",
+    adsb: "#60a5fa",
+    weather: "#06b6d4",
+    wildfire: "#ef4444",
+    earthquake: "#f59e0b",
+    rf_presence: "#c084fc",
+    generic_stream: "#14b8a6",
+    manual: "#eab308",
     blocked: "#64748b",
     unknown: "#a855f7",
 };
@@ -330,7 +337,11 @@ function mapCameraPayload(data: unknown, maxEntities?: number): GeoEntity[] {
 
 function mapArgosPayload(data: unknown, maxEntities?: number): GeoEntity[] {
     const payload = getRecord(data);
-    const items = Array.isArray(payload.items) ? payload.items as Array<Record<string, unknown>> : [];
+    const items = Array.isArray(payload.entities)
+        ? payload.entities as Array<Record<string, unknown>>
+        : Array.isArray(payload.items)
+            ? payload.items as Array<Record<string, unknown>>
+            : [];
     const entities: GeoEntity[] = [];
 
     for (let index = 0; index < items.length; index += 1) {
@@ -341,15 +352,21 @@ function mapArgosPayload(data: unknown, maxEntities?: number): GeoEntity[] {
 
         const id = getString(item.id) ?? `argos-${index}`;
         const title = getString(item.title) ?? id;
+        const sourceType = getString(item.source_type) ?? getString(item.type) ?? "unknown";
         entities.push({
             id,
             pluginId: "argos-live",
             latitude,
             longitude,
-            timestamp: getTimestamp(item.last_checked),
+            altitude: getFiniteNumber(item.alt),
+            heading: getFiniteNumber(item.heading),
+            speed: getFiniteNumber(item.speed),
+            timestamp: getTimestamp(item.last_seen ?? item.last_checked ?? item.updated_at),
             label: title,
             properties: {
                 ...item,
+                source_type: sourceType,
+                type: sourceType,
                 sourcePlugin: "argos-live",
             },
         });
@@ -369,7 +386,7 @@ function createLayerConfig(color: string, maxEntities?: number): LayerConfig {
     };
 }
 
-function renderPoint(entity: GeoEntity, color: string, pointSize: number, showLabel = false): CesiumEntityOptions {
+function renderPoint(entity: GeoEntity, color: string, pointSize: number, showLabel = false, disableClustering = true): CesiumEntityOptions {
     return {
         type: "point",
         color,
@@ -379,7 +396,7 @@ function renderPoint(entity: GeoEntity, color: string, pointSize: number, showLa
         labelText: showLabel ? entity.label : undefined,
         labelFont: "12px Inter, sans-serif",
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
-        disableClustering: true,
+        disableClustering,
     };
 }
 
@@ -539,12 +556,12 @@ function createArgosPlugin(): WorldPlugin {
     const config: ApiPluginConfig = {
         id: "argos-live",
         name: "ARGOS Live Public Sensors",
-        description: "Public/open camera, traffic, audio, and AIS source catalog with safe live/source handoff.",
-        endpoint: "/api/live-sources/catalog?limit=5000",
+        description: "Near-real-time public/open sensor fusion with provider health, stale state, and safe live/source handoff.",
+        endpoint: "/api/sensors/entities?limit=5000",
         icon: "Radio",
         category: "intelligence",
         color: "#38bdf8",
-        intervalMs: 180_000,
+        intervalMs: 15_000,
         pointSize: 10,
         maxEntities: 5000,
     };
@@ -572,12 +589,17 @@ function createArgosPlugin(): WorldPlugin {
             };
         },
         renderEntity(entity) {
-            const type = getString(entity.properties.type)?.toLowerCase() ?? "unknown";
+            const type = getString(entity.properties.source_type)?.toLowerCase()
+                ?? getString(entity.properties.type)?.toLowerCase()
+                ?? "unknown";
             const legal = getString(entity.properties.legal_status);
+            const stale = getString(entity.properties.status) === "stale"
+                || (getFiniteNumber(entity.properties.freshness_score) ?? 1) < 0.2;
             return renderPoint(
                 entity,
-                legal === "blocked" ? ARGOS_COLORS.blocked : (ARGOS_COLORS[type] ?? ARGOS_COLORS.unknown),
-                legal === "blocked" ? 8 : config.pointSize,
+                stale ? "#94a3b8" : legal === "blocked" ? ARGOS_COLORS.blocked : (ARGOS_COLORS[type] ?? ARGOS_COLORS.unknown),
+                stale || legal === "blocked" ? 8 : config.pointSize,
+                false,
                 false,
             );
         },
@@ -587,6 +609,7 @@ function createArgosPlugin(): WorldPlugin {
                 { label: "Traffic", color: ARGOS_COLORS.traffic_camera },
                 { label: "Audio", color: ARGOS_COLORS.audio },
                 { label: "AIS", color: ARGOS_COLORS.ais },
+                { label: "Weather/Wildfire", color: ARGOS_COLORS.wildfire },
                 { label: "Blocked", color: ARGOS_COLORS.blocked },
             ];
         },
@@ -596,12 +619,16 @@ function createArgosPlugin(): WorldPlugin {
                     id: "argos-type",
                     label: "ARGOS Type",
                     type: "select",
-                    propertyKey: "type",
+                    propertyKey: "source_type",
                     options: [
                         { value: "webcam", label: "Webcam" },
                         { value: "traffic_camera", label: "Traffic" },
                         { value: "audio", label: "Audio" },
                         { value: "ais", label: "AIS" },
+                        { value: "weather", label: "Weather" },
+                        { value: "wildfire", label: "Wildfire" },
+                        { value: "earthquake", label: "Earthquake" },
+                        { value: "generic_stream", label: "Generic Stream" },
                         { value: "blocked", label: "Blocked" },
                     ],
                 },
@@ -615,6 +642,16 @@ function createArgosPlugin(): WorldPlugin {
                         { value: "api_required", label: "API Required" },
                         { value: "blocked", label: "Blocked" },
                         { value: "unknown", label: "Unknown" },
+                    ],
+                },
+                {
+                    id: "argos-status",
+                    label: "Freshness",
+                    type: "select",
+                    propertyKey: "status",
+                    options: [
+                        { value: "active", label: "Active" },
+                        { value: "stale", label: "Stale" },
                     ],
                 },
             ];
