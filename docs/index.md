@@ -1,23 +1,31 @@
 # Oculus0Osint Documentation
 
-Welcome to the official documentation for **Oculus0Osint**, a real-time 3D globe visualization platform.
-
-This documentation is organized into the following sections:
+Welcome to the documentation for **Oculus0Osint**, a real-time 3D globe visualization platform operated as a sovereign self-hosted local edition.
 
 ## Navigation
 
-- **[Architecture](ARCHITECTURE.md)**: Understand the core design, data flow, and system components.
-- **[Plugin Guide](PLUGIN_GUIDE.md)**: Learn how to extend the platform with custom data layers and UI.
-- **[API Reference](API_REFERENCE.md)**: Detailed technical documentation for internal services (DataBus, Registry, etc.).
-- **[User Guide](USER_GUIDE.md)**: A comprehensive guide on how to use the Oculus0Osint application features.
+- **[Project Overview](project-overview.md)** — what this fork is and isn't.
+- **[Architecture](ARCHITECTURE.md)** — core design, data flow, system components.
+- **[Build System](build-system.md)** — pnpm workspace, Next.js standalone output, Cesium asset pipeline.
+- **[Development](development.md)** — coding conventions, file-size limits, Zustand slice patterns.
+- **[Deployment](deployment.md)** — Docker / Coolify deployment notes (cloud-edition path; for the local edition see `launch-oculus0osint.ps1`).
+- **[Testing](testing.md)** — Vitest setup and patterns.
+- **[Files Catalog](files.md)** — annotated map of where things live.
+
+### Feature notes
+
+- **[GeoJSON import guide](geojson-guide.md)**
+- **[Citizen ingest](citizen-ingest.md)**
+- **[Flock ALPR ingest](flock-ingest.md)**
 
 ## Quick Links
 
 - [Root README](../README.md)
+- [Phase 1 Report](../OCULUS_PHASE1_REPORT.md) — current doctrine and operational state.
 - [CesiumJS Documentation](https://cesium.com/learn/cesiumjs/ref-doc/)
 - [Resium Documentation](https://resium.com/)
 
 ---
 
 > [!TIP]
-> If you are new to the project, we recommend starting with the **[Architecture](ARCHITECTURE.md)** overview to get a feel for how everything fits together.
+> New to the project? Start with **[Project Overview](project-overview.md)**, then **[Architecture](ARCHITECTURE.md)**. The Phase 1 report at the repository root captures the operational doctrine of this fork.

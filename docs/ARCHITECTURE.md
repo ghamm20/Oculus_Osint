@@ -24,7 +24,7 @@ The core design philosophy is the "All-Bundle Model," where plugins are dynamica
 ## Data Flow
 Real-time data follows a strict unidirectional stream optimized for sub-second updates:
 
-1. **Engine Push:** A remote data engine pushes state over WebSocket (`/stream`) from either local seeders (`ws://localhost:5000/stream`) or the cloud fallback (`wss://dataengine.worldwideview.dev/stream`).
+1. **Engine Push:** A remote data engine pushes state over WebSocket (`/stream`) from a local seeder process (default `ws://localhost:5000/stream`). The engine URL is resolvable through `src/core/data/resolveEngineUrl.ts`; in a self-hosted local edition the local seeder is the only path that fires.
 2. **WebSocket Client Router:** `WsClient.handleMessage()` receives the payload and pipes it to the event bus.
 3. **DataBus Emission:** The bus fires `DataBus.emit("websocketData", WsStreamPayload)`.
 4. **State Hydration:** The `DataBusSubscriber` component listens to the bus and calls `_hydrateSnapshot()` to update the Zustand store's `entitiesByPlugin` cache.

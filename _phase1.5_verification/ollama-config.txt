@@ -1,0 +1,13 @@
+# Oculus Ollama daemon — Phase 1.5 lock-in
+captured: 2026-05-24T22:51:25Z
+
+binary:        $env:LOCALAPPDATA\Programs\Ollama\ollama.exe
+host:          127.0.0.1:11434
+models dir:    C:\AI\OCULUSBOUND\ollama-models
+models in store:
+  - gemma2-2b-local:latest (1629.4 MB)
+
+autostart:     launch-oculus0osint.ps1 -> Start-OllamaIfNeeded()
+.env.local:    LOCAL_LLM_BASE_URL=http://127.0.0.1:11434
+               LOCAL_LLM_MODEL=gemma2-2b-local:latest
+AUTH_TRUST_HOST: now set by launch-oculus0osint.ps1 (not .env.local)
