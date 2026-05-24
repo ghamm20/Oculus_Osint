@@ -1,0 +1,33 @@
+{
+  "id": "military-bases",
+  "name": "Military Bases",
+  "description": "WorldWideView plugin for worldwide military bases, airfields, and barracks from OpenStreetMap",
+  "category": "Military",
+  "icon": "Swords",
+  "installs": 0,
+  "author": "WorldWideView",
+  "version": "1.1.6",
+  "format": "bundle",
+  "trust": "verified",
+  "tags": [
+    "worldwideview",
+    "worldwideview-plugin",
+    "wwv-plugin-military-bases",
+    "military",
+    "bases",
+    "airfields",
+    "geojson",
+    "cesium",
+    "globe"
+  ],
+  "updatedAt": "2026-05-20",
+  "longDescription": "Displays worldwide military bases, airfields, and barracks sourced from OpenStreetMap. Static GeoJSON data layer with clustered point markers — no external API calls at runtime.",
+  "capabilities": [
+    "data:own"
+  ],
+  "compatibility": ">=0.1.0",
+  "repository": "https://github.com/silvertakana/worldwideview-plugins",
+  "changelog": "- **v1.0.0** — Initial release with OSM military installation data.",
+  "readme": "# @worldwideview/wwv-plugin-military-bases\r\n\r\nWorldWideView plugin for worldwide military bases, airfields, and barracks from OpenStreetMap\r\n\r\n## Usage\r\nThis package is part of the WorldWideView plugin ecosystem. It provides the following capabilities:\r\n- **ID:** `military-bases`\r\n- **Category:** Military\r\n- **Format:** static\r\n\r\n## Installation\r\nTypically installed via the WorldWideView Marketplace or discovered automatically.\r\nIf installing manually in a Next.js setup:\r\n```bash\r\nnpm install @worldwideview/wwv-plugin-military-bases\r\n```\r\n\r\n## Architecture\r\nThis plugin adheres to the WorldWideView standard plugin structure. As a `static` plugin, it connects to the core Event Bus and renders map capabilities.\r\n\r\n---\r\n*Built for WorldWideView.*\r\n",
+  "entry": "http://localhost:3010/wwv-mirror/plugins/@worldwideview/wwv-plugin-military-bases@1.1.6/dist/frontend.mjs"
+}

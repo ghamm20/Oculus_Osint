@@ -94,6 +94,11 @@ $env:PORT = $port
 $env:HOSTNAME = "0.0.0.0"
 $env:AUTH_TRUST_HOST = "true"
 $env:NEXT_PUBLIC_WWV_EDITION = "local"
+# Phase 2 — point the marketplace + registry URLs at the local mirror.
+# Mirror lives at public/wwv-mirror/ and is populated by
+# `node scripts/sync-plugin-mirror.mjs` (one-time op, owner-run).
+$env:NEXT_PUBLIC_MARKETPLACE_URL = "http://localhost:$port/wwv-mirror"
+$env:WWV_REGISTRY_URL = "http://localhost:$port/wwv-mirror/api/registry"
 
 Write-Host "Starting Oculus0Osint on $url ..."
 Write-Host "Repo: $repoRoot"
@@ -105,6 +110,8 @@ Set-Location -LiteralPath '$repoRoot'
 `$env:HOSTNAME='0.0.0.0'
 `$env:AUTH_TRUST_HOST='true'
 `$env:NEXT_PUBLIC_WWV_EDITION='local'
+`$env:NEXT_PUBLIC_MARKETPLACE_URL='http://localhost:$port/wwv-mirror'
+`$env:WWV_REGISTRY_URL='http://localhost:$port/wwv-mirror/api/registry'
 corepack pnpm start *>> '$serverLog'
 "@
 

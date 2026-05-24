@@ -1,0 +1,28 @@
+{
+  "id": "conflict-zones",
+  "name": "Conflict Zones",
+  "description": "WorldWideView plugin â€” Active conflict zones and geopolitical hotspots worldwide.",
+  "category": "Conflict",
+  "icon": "Crosshair",
+  "installs": 0,
+  "author": "WorldWideView",
+  "version": "1.1.9",
+  "format": "bundle",
+  "trust": "built-in",
+  "tags": [
+    "worldwideview",
+    "worldwideview-plugin",
+    "conflict-zones",
+    "hotspots"
+  ],
+  "updatedAt": "2026-05-20",
+  "longDescription": "Active conflict zones and geopolitical hotspots worldwide. Highlights major crisis regions with variable risk radii.",
+  "capabilities": [
+    "data:own"
+  ],
+  "compatibility": ">=0.1.0",
+  "repository": "https://github.com/silvertakana/worldwideview-plugins",
+  "changelog": "v1.0.0 — Initial release with heavily monitored global flashpoints.",
+  "readme": "# @worldwideview/wwv-plugin-conflict-zones\r\n\r\nWorldWideView plugin — Active conflict zones and geopolitical hotspots worldwide.\r\n\r\n## Usage\r\nThis package is part of the WorldWideView plugin ecosystem. It provides the following capabilities:\r\n- **ID:** `conflict-zones`\r\n- **Category:** Conflict\r\n- **Format:** bundle\r\n\r\n## Installation\r\nTypically installed via the WorldWideView Marketplace or discovered automatically.\r\nIf installing manually in a Next.js setup:\r\n```bash\r\nnpm install @worldwideview/wwv-plugin-conflict-zones\r\n```\r\n\r\n## Architecture\r\nThis plugin adheres to the WorldWideView standard plugin structure. As a `bundle` plugin, it connects to the core Event Bus and renders map capabilities.\r\n\r\n---\r\n*Built for WorldWideView.*\r\n",
+  "entry": "http://localhost:3010/wwv-mirror/plugins/@worldwideview/wwv-plugin-conflict-zones@1.1.9/dist/frontend.mjs"
+}

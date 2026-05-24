@@ -1,0 +1,23 @@
+{
+  "id": "undersea-cables",
+  "name": "Undersea Cables",
+  "description": "Undersea Cables Plugin for WorldWideView",
+  "category": "Infrastructure",
+  "icon": "Cable",
+  "installs": 0,
+  "author": "WorldWideView",
+  "version": "1.0.15",
+  "format": "bundle",
+  "trust": "built-in",
+  "tags": [],
+  "updatedAt": "2026-05-20",
+  "longDescription": "Displays the global network of submarine telecommunication cables using the TeleGeography Submarine Cable Map data.",
+  "capabilities": [
+    "data:own",
+    "network:fetch"
+  ],
+  "compatibility": ">=0.1.0",
+  "changelog": "v1.0.0 — Initial release with GeoJSON data loading and visualization.",
+  "readme": "# @worldwideview/wwv-plugin-undersea-cables\r\n\r\nUndersea Cables Plugin for WorldWideView\r\n\r\n## Usage\r\nThis package is part of the WorldWideView plugin ecosystem. It provides the following capabilities:\r\n- **ID:** `undersea-cables`\r\n- **Category:** Custom\r\n- **Format:** bundle\r\n\r\n## Installation\r\nTypically installed via the WorldWideView Marketplace or discovered automatically.\r\nIf installing manually in a Next.js setup:\r\n```bash\r\nnpm install @worldwideview/wwv-plugin-undersea-cables\r\n```\r\n\r\n## Architecture\r\nThis plugin adheres to the WorldWideView standard plugin structure. As a `bundle` plugin, it connects to the core Event Bus and renders map capabilities.\r\n\r\n---\r\n*Built for WorldWideView.*\r\n",
+  "entry": "http://localhost:3010/wwv-mirror/plugins/@worldwideview/wwv-plugin-undersea-cables@1.0.15/dist/frontend.mjs"
+}

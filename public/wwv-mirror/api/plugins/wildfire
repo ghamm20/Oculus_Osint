@@ -1,0 +1,35 @@
+{
+  "id": "wildfire",
+  "name": "Wildfire",
+  "description": "WorldWideView plugin for active wildfire and hotspot detection using NASA FIRMS (VIIRS) satellite data. Supports tiered LOD rendering and FRP-based sizing",
+  "category": "Natural Disaster",
+  "icon": "Flame",
+  "installs": 0,
+  "author": "WorldWideView",
+  "version": "1.0.19",
+  "format": "bundle",
+  "trust": "built-in",
+  "tags": [
+    "worldwideview",
+    "worldwideview-plugin",
+    "wwv-plugin-wildfire",
+    "wildfire",
+    "fire-detection",
+    "nasa-firms",
+    "viirs",
+    "satellite",
+    "cesium",
+    "globe"
+  ],
+  "updatedAt": "2026-05-12",
+  "longDescription": "Visualize active wildfires and thermal anomalies detected by NASA's VIIRS satellite instrument via the FIRMS API. Fire points are color-coded by confidence level and update automatically.",
+  "capabilities": [
+    "data:own",
+    "network:fetch"
+  ],
+  "compatibility": ">=0.1.0",
+  "repository": "https://github.com/silvertakana/worldwideview-plugins",
+  "changelog": "- **v1.0.3** — Added README with feature list and usage docs.\r\n- **v1.0.2** — Package metadata updates.\r\n- **v1.0.1** — Package configuration fixes.\r\n- **v1.0.0** — Initial release with VIIRS fire detection and confidence-based rendering.",
+  "readme": "# @worldwideview/wwv-plugin-wildfire\n\nWorldWideView plugin for active wildfire and hotspot detection using NASA FIRMS (VIIRS) satellite data. Supports tiered LOD rendering and FRP-based sizing\n\n## Usage\nThis package is part of the WorldWideView plugin ecosystem. It provides the following capabilities:\n- **ID:** `wildfire`\n- **Category:** Natural Disaster\n- **Format:** bundle\n\n## Installation\nTypically installed via the WorldWideView Marketplace or discovered automatically.\nIf installing manually in a Next.js setup:\n```bash\nnpm install @worldwideview/wwv-plugin-wildfire\n```\n\n## Architecture\nThis plugin adheres to the WorldWideView standard plugin structure. As a `bundle` plugin, it connects to the core Event Bus and renders map capabilities.\n\n---\n*Built for WorldWideView.*\n",
+  "entry": "http://localhost:3010/wwv-mirror/plugins/@worldwideview/wwv-plugin-wildfire@1.0.19/dist/frontend.mjs"
+}

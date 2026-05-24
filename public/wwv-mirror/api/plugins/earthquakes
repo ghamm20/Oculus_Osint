@@ -1,0 +1,23 @@
+{
+  "id": "earthquakes",
+  "name": "Earthquakes",
+  "description": "WorldWideView plugin covering earthquakes features.",
+  "category": "Natural Disasters",
+  "icon": "Activity",
+  "installs": 0,
+  "author": "WorldWideView",
+  "version": "1.1.9",
+  "format": "bundle",
+  "trust": "verified",
+  "tags": [],
+  "updatedAt": "2026-05-12",
+  "longDescription": "No description provided.",
+  "capabilities": [
+    "data:own",
+    "network:fetch"
+  ],
+  "compatibility": ">=0.1.0",
+  "changelog": "",
+  "readme": "# @worldwideview/wwv-plugin-earthquakes\n\nWorldWideView plugin covering earthquakes features.\n\n## Usage\nThis package is part of the WorldWideView plugin ecosystem. It provides the following capabilities:\n- **ID:** `earthquakes`\n- **Category:** Natural Disasters\n- **Format:** bundle\n\n## Installation\nTypically installed via the WorldWideView Marketplace or discovered automatically.\nIf installing manually in a Next.js setup:\n```bash\nnpm install @worldwideview/wwv-plugin-earthquakes\n```\n\n## Architecture\nThis plugin adheres to the WorldWideView standard plugin structure. As a `bundle` plugin, it connects to the core Event Bus and renders map capabilities.\n\n---\n*Built for WorldWideView.*\n",
+  "entry": "http://localhost:3010/wwv-mirror/plugins/@worldwideview/wwv-plugin-earthquakes@1.1.9/dist/frontend.mjs"
+}

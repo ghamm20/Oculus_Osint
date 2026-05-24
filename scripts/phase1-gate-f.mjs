@@ -190,12 +190,16 @@ try {
     }
 
     const offsite = all.filter((r) => !isLocal(r.url));
+    const mirrorHits = all.filter((r) => {
+        try { return new URL(r.url).pathname.startsWith("/wwv-mirror"); } catch { return false; }
+    });
     const lines = [
         `# Gate F — outbound network audit`,
         `# captured: ${new Date().toISOString()}`,
         `# url: ${urlArg}`,
         `# total requests observed: ${all.length}`,
         `# requests to localhost / 127.0.0.1 / data: / blob: : ${all.length - offsite.length}`,
+        `# of which to /wwv-mirror (plugin mirror): ${mirrorHits.length}`,
         `# off-site requests: ${offsite.length}`,
         ``,
     ];
@@ -205,6 +209,13 @@ try {
         lines.push("FAIL: off-site requests detected.");
         for (const r of offsite) {
             lines.push(`- ${r.method} ${r.url}  (status=${r.status ?? "n/a"} type=${r.type ?? "n/a"} initiator=${r.initiator ?? "n/a"})`);
+        }
+    }
+    if (mirrorHits.length > 0) {
+        lines.push(``);
+        lines.push(`# wwv-mirror hits (local same-origin, kept here as evidence the mirror is live):`);
+        for (const r of mirrorHits) {
+            lines.push(`+ ${r.method} ${r.url}  (status=${r.status ?? "n/a"} type=${r.type ?? "n/a"})`);
         }
     }
     writeFileSync(outArg, lines.join("\n") + "\n");

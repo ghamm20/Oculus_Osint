@@ -1,0 +1,28 @@
+{
+  "id": "spaceports",
+  "name": "Spaceports",
+  "description": "WorldWideView plugin â€” Space launch sites worldwide from OSM",
+  "category": "Space",
+  "icon": "Rocket",
+  "installs": 0,
+  "author": "WorldWideView",
+  "version": "1.1.4",
+  "format": "bundle",
+  "trust": "verified",
+  "tags": [
+    "worldwideview",
+    "worldwideview-plugin",
+    "wwv-plugin-spaceports",
+    "spaceports"
+  ],
+  "updatedAt": "2026-05-20",
+  "longDescription": "Displays space launch sites worldwide using OpenStreetMap data. Includes major spaceports like Cape Canaveral, Baikonur, and Guiana Space Centre.",
+  "capabilities": [
+    "data:own"
+  ],
+  "compatibility": ">=0.1.0",
+  "repository": "https://github.com/silvertakana/worldwideview-plugins",
+  "changelog": "v1.0.0 — Initial release with global spaceport data from OSM.",
+  "readme": "# @worldwideview/wwv-plugin-spaceports\r\n\r\nWorldWideView plugin — Space launch sites worldwide from OSM\r\n\r\n## Usage\r\nThis package is part of the WorldWideView plugin ecosystem. It provides the following capabilities:\r\n- **ID:** `spaceports`\r\n- **Category:** Space\r\n- **Format:** static\r\n\r\n## Installation\r\nTypically installed via the WorldWideView Marketplace or discovered automatically.\r\nIf installing manually in a Next.js setup:\r\n```bash\r\nnpm install @worldwideview/wwv-plugin-spaceports\r\n```\r\n\r\n## Architecture\r\nThis plugin adheres to the WorldWideView standard plugin structure. As a `static` plugin, it connects to the core Event Bus and renders map capabilities.\r\n\r\n---\r\n*Built for WorldWideView.*\r\n",
+  "entry": "http://localhost:3010/wwv-mirror/plugins/@worldwideview/wwv-plugin-spaceports@1.1.4/dist/frontend.mjs"
+}

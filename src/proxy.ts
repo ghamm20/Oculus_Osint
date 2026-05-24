@@ -61,12 +61,16 @@ export default async function proxy(req: NextRequest) {
         return res;
     }
 
-    // Static assets, API routes, data files — always pass through
+    // Static assets, API routes, data files — always pass through.
+    // /wwv-mirror is the Phase 2 plugin mirror: the manifest URLs are
+    // extension-less by design (they mirror the upstream API shape), so the
+    // path.includes(".") catch-all doesn't trigger. Whitelist explicitly.
     if (
         path.startsWith("/_next") ||
         path.startsWith("/api") ||
         path.startsWith("/data") ||
         path.startsWith("/cesium") ||
+        path.startsWith("/wwv-mirror") ||
         path.includes(".")
     ) {
         const res = NextResponse.next();

@@ -1,0 +1,28 @@
+{
+  "id": "embassies",
+  "name": "Embassies",
+  "description": "WorldWideView plugin â€” Global embassies, consulates, and diplomatic missions from OpenStreetMap",
+  "category": "Custom",
+  "icon": "Landmark",
+  "installs": 0,
+  "author": "WorldWideView",
+  "version": "1.1.4",
+  "format": "bundle",
+  "trust": "verified",
+  "tags": [
+    "worldwideview",
+    "worldwideview-plugin",
+    "wwv-plugin-embassies",
+    "embassies"
+  ],
+  "updatedAt": "2026-05-20",
+  "longDescription": "Displays 17,266 embassies, consulates, and diplomatic missions worldwide using OpenStreetMap data. Includes country, diplomatic type, and target nation metadata.",
+  "capabilities": [
+    "data:own"
+  ],
+  "compatibility": ">=0.1.0",
+  "repository": "https://github.com/silvertakana/worldwideview-plugins",
+  "changelog": "- **v1.0.0** — Initial release with global diplomatic mission data from OSM.",
+  "readme": "# @worldwideview/wwv-plugin-embassies\r\n\r\nWorldWideView plugin — Global embassies, consulates, and diplomatic missions from OpenStreetMap\r\n\r\n## Usage\r\nThis package is part of the WorldWideView plugin ecosystem. It provides the following capabilities:\r\n- **ID:** `embassies`\r\n- **Category:** Custom\r\n- **Format:** static\r\n\r\n## Installation\r\nTypically installed via the WorldWideView Marketplace or discovered automatically.\r\nIf installing manually in a Next.js setup:\r\n```bash\r\nnpm install @worldwideview/wwv-plugin-embassies\r\n```\r\n\r\n## Architecture\r\nThis plugin adheres to the WorldWideView standard plugin structure. As a `static` plugin, it connects to the core Event Bus and renders map capabilities.\r\n\r\n---\r\n*Built for WorldWideView.*\r\n",
+  "entry": "http://localhost:3010/wwv-mirror/plugins/@worldwideview/wwv-plugin-embassies@1.1.4/dist/frontend.mjs"
+}

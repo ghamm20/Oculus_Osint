@@ -1,0 +1,23 @@
+{
+  "id": "cyber-attacks",
+  "name": "Cyber Attacks",
+  "description": "WorldWideView plugin covering cyber attacks features.",
+  "category": "Intelligence",
+  "icon": "Layer",
+  "installs": 0,
+  "author": "WorldWideView",
+  "version": "2.0.17",
+  "format": "bundle",
+  "trust": "verified",
+  "tags": [],
+  "updatedAt": "2026-05-12",
+  "longDescription": "WorldWideView plugin covering cyber attacks features.",
+  "capabilities": [
+    "data:own",
+    "network:fetch"
+  ],
+  "compatibility": ">=0.1.0",
+  "changelog": "",
+  "readme": "# @worldwideview/wwv-plugin-cyber-attacks\n\nWorldWideView plugin covering cyber attacks features.\n\n## Usage\nThis package is part of the WorldWideView plugin ecosystem. It provides the following capabilities:\n- **ID:** `cyber-attacks`\n- **Category:** Intelligence\n- **Format:** bundle\n\n## Installation\nTypically installed via the WorldWideView Marketplace or discovered automatically.\nIf installing manually in a Next.js setup:\n```bash\nnpm install @worldwideview/wwv-plugin-cyber-attacks\n```\n\n## Architecture\nThis plugin adheres to the WorldWideView standard plugin structure. As a `bundle` plugin, it connects to the core Event Bus and renders map capabilities.\n\n---\n*Built for WorldWideView.*\n",
+  "entry": "http://localhost:3010/wwv-mirror/plugins/@worldwideview/wwv-plugin-cyber-attacks@2.0.17/dist/frontend.mjs"
+}

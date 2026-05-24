@@ -25,8 +25,11 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              // CesiumJS requires unsafe-eval (worker compilation) and unsafe-inline (styles)
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: https://unpkg.com https://cdn.jsdelivr.net",
+              // CesiumJS requires unsafe-eval (worker compilation) and unsafe-inline (styles).
+              // unpkg.com and cdn.jsdelivr.net were removed in Phase 2 — plugin
+              // bundles now load from the local mirror at /wwv-mirror, which is
+              // already covered by 'self'.
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:",
               "style-src 'self' 'unsafe-inline' fonts.googleapis.com",
               "font-src 'self' fonts.gstatic.com",
               // Camera streams load images/MJPEG from arbitrary IPs worldwide — http: https: required
@@ -58,6 +61,19 @@ const nextConfig: NextConfig = {
     "*": [
       "./public/cesium/**"
     ],
+  },
+  async rewrites() {
+    // Phase 2 plugin mirror: Next.js static serving cannot have the same
+    // path act as both a file (the index) and a directory (per-id manifests),
+    // so the index sits at /wwv-mirror/api/plugins-index.json and this
+    // rewrite presents it at /wwv-mirror/api/plugins to match the upstream
+    // URL surface the existing code expects.
+    return [
+      {
+        source: "/wwv-mirror/api/plugins",
+        destination: "/wwv-mirror/api/plugins-index.json",
+      },
+    ];
   },
   env: {
     CESIUM_BASE_URL: "/cesium",

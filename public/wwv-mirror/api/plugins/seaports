@@ -1,0 +1,28 @@
+{
+  "id": "seaports",
+  "name": "Seaports",
+  "description": "WorldWideView plugin â€” Harbours and seaports worldwide from OSM",
+  "category": "Maritime",
+  "icon": "Anchor",
+  "installs": 0,
+  "author": "WorldWideView",
+  "version": "1.1.4",
+  "format": "bundle",
+  "trust": "verified",
+  "tags": [
+    "worldwideview",
+    "worldwideview-plugin",
+    "wwv-plugin-seaports",
+    "seaports"
+  ],
+  "updatedAt": "2026-05-20",
+  "longDescription": "Displays harbours and seaports worldwide using OpenStreetMap data. Complements the live maritime tracking plugin by showing where vessels dock.",
+  "capabilities": [
+    "data:own"
+  ],
+  "compatibility": ">=0.1.0",
+  "repository": "https://github.com/silvertakana/worldwideview-plugins",
+  "changelog": "v1.0.0 — Initial release with global harbour data from OSM.",
+  "readme": "# @worldwideview/wwv-plugin-seaports\r\n\r\nWorldWideView plugin — Harbours and seaports worldwide from OSM\r\n\r\n## Usage\r\nThis package is part of the WorldWideView plugin ecosystem. It provides the following capabilities:\r\n- **ID:** `seaports`\r\n- **Category:** Maritime\r\n- **Format:** static\r\n\r\n## Installation\r\nTypically installed via the WorldWideView Marketplace or discovered automatically.\r\nIf installing manually in a Next.js setup:\r\n```bash\r\nnpm install @worldwideview/wwv-plugin-seaports\r\n```\r\n\r\n## Architecture\r\nThis plugin adheres to the WorldWideView standard plugin structure. As a `static` plugin, it connects to the core Event Bus and renders map capabilities.\r\n\r\n---\r\n*Built for WorldWideView.*\r\n",
+  "entry": "http://localhost:3010/wwv-mirror/plugins/@worldwideview/wwv-plugin-seaports@1.1.4/dist/frontend.mjs"
+}
