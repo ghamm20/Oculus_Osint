@@ -311,4 +311,7 @@ Goal: close Gate F properly — drive the off-site outbound list to zero (or to 
 
 ## 12. Commit
 
-(see end of report for SHA)
+- Commit SHA: `286a566`
+- Branch: `main`
+- Subject: `phase 1: local edition lockdown, telemetry strip, verification gates`
+- Push status: **not pushed**. Awaiting owner approval before any push.
