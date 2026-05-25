@@ -26,6 +26,14 @@ $ollamaModels = "C:\AI\OCULUSBOUND\ollama-models"
 $ollamaHost = "127.0.0.1:11434"
 $ollamaPort = "11434"
 
+# Phase 4 — local data engine stub (node scripts/local-data-engine.mjs).
+# Replaces upstream wss://dataengine.worldwideview.dev with a same-host
+# shim that translates Oculus's /api endpoints into the plugin engine
+# protocol. Port 5000 per resolveEngineUrl.ts default.
+$dataEnginePort = "5000"
+$dataEngineLog = Join-Path $logDir "data-engine.log"
+$dataEngineScript = Join-Path $repoRoot "scripts\local-data-engine.mjs"
+
 if (-not (Test-Path -LiteralPath $logDir)) {
     New-Item -ItemType Directory -Path $logDir | Out-Null
 }
@@ -38,6 +46,36 @@ function Test-PortOpen {
         Select-Object -First 1
 
     return $null -ne $listener
+}
+
+function Start-DataEngineIfNeeded {
+    if (Test-PortOpen -Port $dataEnginePort) {
+        Write-Host "Data engine: already listening on 127.0.0.1:$dataEnginePort"
+        return
+    }
+    if (-not (Test-Path -LiteralPath $dataEngineScript)) {
+        Write-Warning "Data engine: script not found at $dataEngineScript. Plugins will see 'Data Engine API returned 404' until launched manually."
+        return
+    }
+    Write-Host "Data engine: starting stub on 127.0.0.1:$dataEnginePort (script: $dataEngineScript)"
+    $launchCmd = @"
+Set-Location '$repoRoot'
+`$env:WWV_DATA_ENGINE_PORT='$dataEnginePort'
+`$env:OCULUS_BASE_URL='http://127.0.0.1:$port'
+& node '$dataEngineScript' *>> '$dataEngineLog'
+"@
+    Start-Process -FilePath "powershell.exe" -ArgumentList @(
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $launchCmd
+    ) -WindowStyle Hidden
+    $deadline = (Get-Date).AddSeconds(10)
+    do {
+        Start-Sleep -Milliseconds 500
+        if (Test-PortOpen -Port $dataEnginePort) {
+            Write-Host "Data engine: ready"
+            return
+        }
+    } while ((Get-Date) -lt $deadline)
+    Write-Warning "Data engine: did not bind within 10s. Check $dataEngineLog"
 }
 
 function Start-OllamaIfNeeded {
@@ -77,14 +115,16 @@ Set-Location -LiteralPath $repoRoot
 
 if (Test-PortOpen -Port $port) {
     Start-OllamaIfNeeded
+    Start-DataEngineIfNeeded
     Start-Process $url
     Write-Host "Oculus0Osint is already running at $url"
     Start-Sleep -Seconds 2
     exit 0
 }
 
-# Start Ollama first so the app finds it on first /api/assistant/chat call.
+# Start Ollama + data engine first so the app finds them on first request.
 Start-OllamaIfNeeded
+Start-DataEngineIfNeeded
 
 # Local edition is the doctrine. Do NOT override with demo here —
 # demo disables auth, history, and settings.
@@ -99,6 +139,8 @@ $env:NEXT_PUBLIC_WWV_EDITION = "local"
 # `node scripts/sync-plugin-mirror.mjs` (one-time op, owner-run).
 $env:NEXT_PUBLIC_MARKETPLACE_URL = "http://localhost:$port/wwv-mirror"
 $env:WWV_REGISTRY_URL = "http://localhost:$port/wwv-mirror/api/registry"
+# Phase 4 — point the plugin data engine at the local stub on :5000.
+$env:NEXT_PUBLIC_WWV_PLUGIN_DATA_ENGINE_URL = "http://localhost:$dataEnginePort"
 
 Write-Host "Starting Oculus0Osint on $url ..."
 Write-Host "Repo: $repoRoot"
@@ -112,6 +154,7 @@ Set-Location -LiteralPath '$repoRoot'
 `$env:NEXT_PUBLIC_WWV_EDITION='local'
 `$env:NEXT_PUBLIC_MARKETPLACE_URL='http://localhost:$port/wwv-mirror'
 `$env:WWV_REGISTRY_URL='http://localhost:$port/wwv-mirror/api/registry'
+`$env:NEXT_PUBLIC_WWV_PLUGIN_DATA_ENGINE_URL='http://localhost:$dataEnginePort'
 corepack pnpm start *>> '$serverLog'
 "@
 

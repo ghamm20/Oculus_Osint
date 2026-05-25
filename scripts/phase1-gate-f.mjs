@@ -164,8 +164,18 @@ try {
     await cdp(ws, "Page.navigate", { url: urlArg }, sessionId);
     await loaded;
 
-    // Watch for an extra 8s to catch any deferred outbound calls
-    await wait(8000);
+    // Optional pre-audit eval (e.g. layer-toggle JS) to exercise more of the app.
+    if (process.env.GATE_F_EVAL) {
+        await wait(Number(process.env.GATE_F_PRE_EVAL_MS) || 6000);
+        try {
+            await cdp(ws, "Runtime.evaluate", { expression: process.env.GATE_F_EVAL, awaitPromise: true }, sessionId);
+        } catch (e) {
+            console.error("eval failed:", e.message);
+        }
+    }
+
+    // Watch for an extra window to catch deferred outbound calls (data fetches, WS).
+    await wait(Number(process.env.GATE_F_POST_WAIT_MS) || 8000);
 
     const all = [];
     for (const [id, req] of requests.entries()) {
