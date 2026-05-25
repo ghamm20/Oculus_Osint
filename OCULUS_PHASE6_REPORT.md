@@ -87,4 +87,7 @@ Phase 7 (docs WWV → Oculus0Osint completion pass) is next in the autonomous qu
 
 ## 7. Commit
 
-(SHA stamped after commit)
+- Commit SHA: `8eb4f14`
+- Branch: `main`
+- Subject: `phase 6: isCloud cleanup — remove WWV apex-redirect, generalize tenant matcher`
+- Push: pending end-of-iteration push.
