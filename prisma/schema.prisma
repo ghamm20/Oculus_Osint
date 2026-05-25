@@ -292,16 +292,17 @@ model UserStreamRecord {
 }
 
 model Workspace {
-  id                   String             @id @default(uuid())
-  name                 String
-  subdomain            String             @unique
-  status               String             @default("trialing")
-  plan                 String             @default("basic")
-  stripeCustomerId     String?
-  stripeSubscriptionId String?
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
-  members              WorkspaceMember[]
+  id        String            @id @default(uuid())
+  name      String
+  subdomain String            @unique
+  status    String            @default("trialing")
+  plan      String            @default("basic")
+  // Phase 5: removed stripeCustomerId / stripeSubscriptionId fields when
+  // the Stripe + Supabase scaffolding was ripped out. status/plan stay
+  // because they're useful as edition-agnostic flags.
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  members   WorkspaceMember[]
 
   @@map("workspaces")
 }

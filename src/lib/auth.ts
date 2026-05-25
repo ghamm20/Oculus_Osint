@@ -3,9 +3,8 @@ import Credentials from "next-auth/providers/credentials";
 import { compareSync } from "bcryptjs";
 import { timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/db";
-import { isDemo, isCloud, getDemoAdminSecret, DEMO_ADMIN_ROLE } from "@/core/edition";
+import { isDemo, getDemoAdminSecret, DEMO_ADMIN_ROLE } from "@/core/edition";
 import { authConfig } from "@/lib/auth.config";
-import { SupabaseAdapter } from "@auth/supabase-adapter";
 
 // Extract local credentials logic to a helper
 const localCredentialsProvider = Credentials({
@@ -53,10 +52,9 @@ const localCredentialsProvider = Credentials({
 export const { handlers, auth, signIn, signOut } = NextAuth({
     ...authConfig,
     session: { strategy: "jwt" },
-    adapter: isCloud ? SupabaseAdapter({
-        url: process.env.NEXT_PUBLIC_SUPABASE_URL || "http://dummy.supabase.co",
-        secret: process.env.SUPABASE_SERVICE_ROLE_KEY || "dummy",
-    }) as any : undefined,
+    // Phase 5 removed the SupabaseAdapter that was conditionally attached
+    // for the cloud edition. JWT sessions back the local + cloud + demo
+    // editions equivalently — no external adapter needed.
     providers: [localCredentialsProvider],
     callbacks: {
         ...authConfig.callbacks,
