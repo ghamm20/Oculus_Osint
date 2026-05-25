@@ -66,7 +66,13 @@ export const createConfigSlice: StateCreator<AppStore, [], [], ConfigSlice> = (s
         maxScreenSpaceError: 32, // Increase from 16 to 32 to significantly reduce 3D tile network requests and costs
         shadowsEnabled: false,
         enableLighting: false,
-        baseLayerId: (typeof window !== "undefined" && window.localStorage && typeof window.localStorage.getItem === "function") ? (localStorage.getItem("wwv_map_layer") || "google-3d") : "google-3d",
+        // Phase 3: default to the sovereign-offline layer (Cesium's bundled
+        // Natural Earth II tiles, zero-network). Owner can override at build
+        // time via NEXT_PUBLIC_DEFAULT_IMAGERY_LAYER, or at runtime via the
+        // imagery picker (persisted to localStorage as wwv_map_layer).
+        baseLayerId: (typeof window !== "undefined" && window.localStorage && typeof window.localStorage.getItem === "function")
+            ? (localStorage.getItem("wwv_map_layer") || process.env.NEXT_PUBLIC_DEFAULT_IMAGERY_LAYER || "sovereign-offline")
+            : (process.env.NEXT_PUBLIC_DEFAULT_IMAGERY_LAYER || "sovereign-offline"),
         fallbackLayerId: null,
         sceneMode: 3,
     },

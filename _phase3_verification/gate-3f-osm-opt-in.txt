@@ -1,0 +1,17 @@
+# Gate 3F — opt-in imagery proof
+# captured: 2026-05-25T00:08:26.621Z
+# pre-set: localStorage.wwv_map_layer = "osm"
+# url:     http://localhost:3010/
+# total requests (second nav onwards): 124
+# off-site: 36
+# of which OSM tiles: 36
+
+PASS: OSM tiles loading — opt-in seam works.
+Sample OSM hits:
++ GET https://b.tile.openstreetmap.org/1/0/0.png (status=200)
++ GET https://c.tile.openstreetmap.org/1/0/1.png (status=200)
++ GET https://c.tile.openstreetmap.org/1/1/0.png (status=200)
++ GET https://a.tile.openstreetmap.org/1/1/1.png (status=200)
++ GET https://a.tile.openstreetmap.org/2/1/0.png (status=200)
+
+Other off-site (informational):

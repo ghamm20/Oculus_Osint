@@ -39,6 +39,12 @@ if (typeof window !== "undefined") {
     (buildModuleUrl as unknown as { setBaseUrl: (baseUrl: string) => void }).setBaseUrl("/cesium/");
     if (process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN) {
         Ion.defaultAccessToken = process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN;
+    } else {
+        // Phase 3 sovereign default: clear Cesium's built-in default Ion token
+        // so we never silently call api.cesium.com with the shared library
+        // token. Owner must set NEXT_PUBLIC_CESIUM_ION_TOKEN to opt in to
+        // Ion-backed providers (blue-marble, Bing fallback, etc.).
+        Ion.defaultAccessToken = "";
     }
 }
 

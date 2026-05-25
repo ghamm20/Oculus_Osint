@@ -4,6 +4,7 @@ import {
     OpenStreetMapImageryProvider,
     ArcGisMapServerImageryProvider,
     UrlTemplateImageryProvider,
+    TileMapServiceImageryProvider,
     BingMapsStyle,
 } from "cesium";
 
@@ -17,9 +18,15 @@ export interface ImageryLayerEntry {
 
 export const IMAGERY_LAYERS: ImageryLayerEntry[] = [
     {
+        id: "sovereign-offline",
+        name: "Sovereign / Offline",
+        description: "Default — Natural Earth II bundled with Cesium. Zero network.",
+        type: "imagery",
+    },
+    {
         id: "google-3d",
         name: "Google Maps 3D",
-        description: "Photorealistic 3D Tiles",
+        description: "Photorealistic 3D Tiles (requires Google Maps API key)",
         type: "google-3d",
     },
     {
@@ -104,6 +111,19 @@ export async function createImageryProvider(layerId: string) {
     const bingKey = process.env.NEXT_PUBLIC_BING_MAPS_KEY;
 
     switch (layerId) {
+        case "sovereign-offline":
+            // Cesium ships Natural Earth II tiles as a TMS pyramid (z=0..2) at
+            // /cesium/Assets/Textures/NaturalEarthII. Low-res but globally
+            // complete and zero-network — the doctrine default for Phase 3.
+            return await TileMapServiceImageryProvider.fromUrl(
+                "/cesium/Assets/Textures/NaturalEarthII",
+                {
+                    credit: "Natural Earth II — Public Domain (bundled with CesiumJS)",
+                    fileExtension: "jpg",
+                    maximumLevel: 2,
+                },
+            );
+
         case "bing-aerial":
             if (bingKey) {
                 return await BingMapsImageryProvider.fromUrl("https://dev.virtualearth.net", {
@@ -158,9 +178,15 @@ export async function createImageryProvider(layerId: string) {
             return await IonImageryProvider.fromAssetId(3845);
 
         default:
-            return new UrlTemplateImageryProvider({
-                url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                subdomains: ["a", "b", "c"]
-            });
+            // Unknown layer ID — fall back to the sovereign offline provider
+            // rather than OpenStreetMap. Phase 3 doctrine: no surprise outbound.
+            return await TileMapServiceImageryProvider.fromUrl(
+                "/cesium/Assets/Textures/NaturalEarthII",
+                {
+                    credit: "Natural Earth II — Public Domain (bundled with CesiumJS)",
+                    fileExtension: "jpg",
+                    maximumLevel: 2,
+                },
+            );
     }
 }

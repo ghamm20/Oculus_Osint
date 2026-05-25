@@ -108,8 +108,12 @@ export function useViewerInitialization(sceneSettings: any) {
             }
 
             if (!googleLoaded) {
+                 // Phase 3 sovereign default: when Google 3D Tiles can't load
+                 // (no API key, or fetch failed), fall back to the bundled
+                 // Natural Earth II offline layer instead of bing-aerial,
+                 // which would have phoned home to Bing / Cesium Ion.
                  if (useStore.getState().mapConfig.baseLayerId === "google-3d") {
-                      useStore.getState().updateMapConfig({ fallbackLayerId: "bing-aerial" });
+                      useStore.getState().updateMapConfig({ fallbackLayerId: "sovereign-offline" });
                  }
                  clearTimeout(globalTimeout);
                  fireGlobeReady();
