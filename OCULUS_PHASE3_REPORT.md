@@ -195,4 +195,8 @@ Alternative: **Phase 4 = ARGOS coupling decision finalization + first ARGOS surf
 
 ## 9. Commit
 
-(SHA stamped after commit)
+- Commit SHA: `709ed61`
+- Branch: `main`
+- Subject: `phase 3: sovereign imagery default — zero off-site outbound on cold load`
+- Push status: **not pushed**. Awaiting owner approval.
+- Diff: 11 files, +612 / -8.
