@@ -188,4 +188,8 @@ Alternative: **Phase 6 = `isCloud` + tri-state edition removal** (simpler, clean
 
 ## 8. Commit
 
-(SHA stamped after commit)
+- Commit SHA: `338c4fa`
+- Branch: `main`
+- Subject: `phase 5: rip out Stripe + Supabase scaffolding`
+- Push status: **pushed** (owner pre-authorized push at start of phase).
+- Diff: 13 files, +343 / -232 (net -111 lines including the lockfile changes from the 10-package removal).
