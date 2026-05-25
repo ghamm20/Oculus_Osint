@@ -140,6 +140,33 @@ export default async function proxy(req: NextRequest) {
         return res;
     }
 
+    // ────────────────────────────────────────────────────────────
+    // DEV-ONLY AUTH BYPASS — WWV_DEV_NO_AUTH=true
+    //
+    // Temporary build-time convenience. When this env var is set, the
+    // proxy lets unauthenticated requests through instead of redirecting
+    // to /login. Pages that read `auth()` server-side will still see no
+    // session, so any UI gated on `session.user` will render in an
+    // anonymous/degraded state — but the globe + plugin layers + Oculus
+    // Analyst all work because they don't check auth themselves.
+    //
+    // This is the ONLY runtime path that disables auth in the local
+    // edition. To re-enable auth, remove WWV_DEV_NO_AUTH from the env
+    // (or set it to anything other than "true").
+    //
+    // The warning fires on every gated request when this is on so the
+    // operator can't forget it's enabled.
+    // ────────────────────────────────────────────────────────────
+    if (process.env.WWV_DEV_NO_AUTH === "true") {
+        console.warn(
+            `[proxy.ts] WWV_DEV_NO_AUTH=true — bypassing auth for ${req.nextUrl.pathname}. ` +
+            `Unset this env to re-enable the login gate.`
+        );
+        const res = NextResponse.next();
+        if (tenantSubdomain) res.headers.set("x-tenant-subdomain", tenantSubdomain);
+        return res;
+    }
+
     // Not logged in — check if first-run (no users)
     try {
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || `http://127.0.0.1:${process.env.PORT || "3000"}`;
