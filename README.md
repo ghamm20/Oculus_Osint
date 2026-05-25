@@ -1,147 +1,138 @@
 <div align="center">
 
-<!-- Generated: 2026-04-23 06:11:00 UTC -->
 # Oculus0Osint
 
-**The Open-Source, Plugin-Driven Geospatial Intelligence Engine**
+**Sovereign, plugin-driven, real-time geospatial intelligence on a 3D globe.**
 
-*A modular situational awareness platform designed to ingest live data streams and render them as interactive, cinematic layers on a high-fidelity CesiumJS 3D globe.*
+*Self-hosted local edition. No telemetry, no cloud auth, no marketplace round-trips at runtime.*
 
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![CesiumJS](https://img.shields.io/badge/Cesium-JS-4272D0)](https://cesium.com/)
 [![TypeScript Strict](https://img.shields.io/badge/TypeScript-Strict-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![Docker](https://img.shields.io/badge/Docker-Multi--Stage-2496ED?logo=docker)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
 
 </div>
 
 ---
 
-Oculus0Osint is a real-time geospatial engine visualizing live global data on an interactive 3D globe. Utilizing a dynamic "All-Bundle" plugin architecture, independent data sources—like live aircraft, maritime vessels, or conflict events—are ingested and rendered decoupled from the core 3D viewer.
+Oculus0Osint is a real-time geospatial intelligence platform that renders live data streams onto an interactive 3D globe. This fork is operated as a sovereign **local edition** — designed to run end-to-end on a single workstation with zero off-site network dependencies on cold boot.
 
-## Key Features
+The upstream WorldWideView SDK (`@worldwideview/wwv-plugin-sdk`, `WWV_*` env contracts, the plugin manifest schema) is preserved as a compatibility surface. The upstream marketplace, cloud auth, billing, and data engine paths have been replaced with same-origin local equivalents.
 
-- **"All-Bundle" Plugin Architecture**: Ingest any data source dynamically without touching the core platform.
-- **High-Fidelity 3D Rendering**: Google Photorealistic 3D Tiles and LOD modeling powered by CesiumJS.
-- **Real-Time Data Pipeline**: High-frequency WebSocket updates managed by a custom `DataBus`.
-- **Advanced Entity Management**: Automatic horizon culling, chunked primitive rendering, and 3D stacking/spiderification.
-- **Marketplace Integration**: Download and sync new plugins directly from the UI.
+## Operational shape
 
-## Core Technologies
+| Surface | This fork's local edition | Original upstream |
+| --- | --- | --- |
+| Auth | NextAuth credentials → Postgres `users` table | Supabase + Stripe (removed Phase 5) |
+| Plugin marketplace | Static mirror at `public/wwv-mirror/` | `marketplace.worldwideview.dev` |
+| Plugin bundles | Same-origin from `/wwv-mirror/plugins/...` | `unpkg.com/@worldwideview/*` |
+| Plugin data engine | Local stub on `:5000`, translates Oculus's `/api/*` | `wss://dataengine.worldwideview.dev` |
+| Imagery | Cesium bundled Natural Earth II (zero network) | Google 3D + Bing Maps + Cesium Ion |
+| LLM (Oculus Analyst) | Local Ollama on `:11434` from `C:\AI\OCULUSBOUND\ollama-models` | n/a (this fork addition) |
+| Telemetry | None (Sentry, Vercel Analytics removed Phase 1) | Sentry + Vercel Analytics |
 
-- **Frontend:** Next.js 16 (App Router), React 19, TypeScript 5
-- **3D Engine:** CesiumJS + Resium (Google Photorealistic 3D Tiles)
-- **State Management:** Zustand
-- **Event Bus:** Custom typed `DataBus` for high-frequency WebSocket updates
-- **Database:** PostgreSQL via Prisma 7
-- **Deployment:** Docker multi-stage build, Coolify
+On a clean authenticated page load with plugin layers enabled, **zero requests go to non-localhost origins**. See `OCULUS_PHASE3_REPORT.md` and `OCULUS_PHASE4_REPORT.md` for the audited evidence.
 
-## Project Architecture
+## Quick start
 
-Oculus0Osint separates the data acquisition layer from the frontend rendering loop, using a real-time event bus to bridge them.
-
-```mermaid
-flowchart TD
-    subgraph Data Sources
-    A[Public APIs] -->|Poll| B[Data Engine Seeders]
-    C[Microservices] -->|Stream| B
-    end
-
-    subgraph Frontend Pipeline
-    B -->|WebSocket /stream| D[DataBus & WsClient]
-    D -->|Hydrate| E[Zustand Store]
-    E -->|Memoized Entities| F[Entity Renderer]
-    F -->|Primitives| G[CesiumJS Globe]
-    end
-
-    subgraph Plugins
-    H[Plugin Registry] -->|Load| I[Dynamic Import CDNs]
-    end
-    
-    H -.-> D
-```
-
-## Prerequisites
-
-Before running the application, ensure you have the following installed:
-- [Node.js](https://nodejs.org/) (v18+)
-- [pnpm](https://pnpm.io/) (v9+)
-- [Docker](https://www.docker.com/) (for self-hosting or full local dev)
-- PostgreSQL (or rely on the `coolify-db` / local compose container)
-
-## Quick Start (Local Development)
-
-From this working fork:
+This fork ships a one-click PowerShell launcher that brings up the full stack.
 
 ```powershell
-cd D:\OCULUSBOUND\Oculus-osint-main
+cd C:\AI\OCULUSBOUND\Oculus-osint-main
+.\launch-oculus0osint.ps1
+```
+
+The launcher:
+
+1. Starts a local Ollama daemon on `127.0.0.1:11434` against `C:\AI\OCULUSBOUND\ollama-models` (if not already running).
+2. Starts the local plugin data engine stub on `127.0.0.1:5000` (`node scripts/local-data-engine.mjs`).
+3. Launches the Oculus0Osint Next.js server on `0.0.0.0:3010` with `NEXT_PUBLIC_WWV_EDITION=local`, `AUTH_TRUST_HOST=true`, marketplace + registry pointed at the local mirror, and data engine pointed at the local stub.
+4. Opens `http://localhost:3010` in your browser.
+
+Prerequisites:
+
+- Node.js 18+
+- pnpm (managed by `corepack`)
+- Docker Desktop (Postgres is brought up via `docker compose up -d db`)
+- Ollama installed at `%LOCALAPPDATA%\Programs\Ollama\ollama.exe` (optional — the Oculus Analyst panel reports offline cleanly if absent)
+- At least one model in `C:\AI\OCULUSBOUND\ollama-models` (Phase 1.5 ships with `gemma2-2b-local:latest`)
+
+Manual setup (one-time):
+
+```powershell
+cd C:\AI\OCULUSBOUND\Oculus-osint-main
 corepack pnpm install
-node scripts/setup.mjs
-corepack pnpm dev
-```
-Visit `http://localhost:3000` to see the live globe.
-
-## Project Structure
-
-The codebase utilizes a `pnpm` monorepo configuration:
-
-```text
-Oculus0Osint/
-├── src/                  # Core frontend app
-│   ├── app/              # Next.js App Router (pages, API routes)
-│   ├── components/       # Shared UI, Globe panels, and 3D layouts
-│   ├── core/             # DataBus, Polling, PluginManager, Store
-│   └── plugins/          # Built-in plugins and registry logic
-├── packages/             # Monorepo packages
-│   ├── wwv-plugin-sdk/   # SDK interfaces and manifest schemas
-│   └── wwv-plugin-*/     # Individual plugins & their backends
-└── prisma/               # Database schemas & migrations
+docker compose up -d db
+corepack pnpm exec prisma generate
+corepack pnpm exec prisma db push --accept-data-loss
+corepack pnpm build
+# First-run owner account creation:
+node scripts/phase1-create-owner.mjs
 ```
 
-## Plugin Ecosystem
+## Project layout
 
-Oculus0Osint operates on an open-core philosophy. The platform itself is data-agnostic; all data sources are dynamically imported as plugins at runtime.
+```
+Oculus-osint-main/
+├── src/
+│   ├── app/                  Next.js App Router (pages + /api routes)
+│   ├── components/           UI panels, globe overlays, video
+│   ├── core/                 DataBus, Zustand store, PluginManager,
+│   │                         globe rendering, edition gates
+│   ├── lib/                  Auth, marketplace helpers, rate limiters
+│   └── plugins/              Built-in plugin code
+├── packages/                 Internal monorepo packages
+│   └── wwv-plugin-sdk/       Upstream SDK (kept as compatibility surface)
+├── public/
+│   ├── cesium/               CesiumJS static assets (workers + textures)
+│   └── wwv-mirror/           Phase 2 plugin mirror (registry + manifests +
+│                             bundles, populated by sync-plugin-mirror.mjs)
+├── prisma/                   Postgres schema + migrations
+├── scripts/
+│   ├── local-data-engine.mjs Phase 4 WS + REST stub on :5000
+│   ├── sync-plugin-mirror.mjs Phase 2 one-time mirror sync (touches upstream)
+│   ├── phase1-shoot.mjs       CDP screenshotter
+│   ├── phase1-gate-f.mjs      Outbound-network audit
+│   └── start-standalone.mjs   Loads .env files for `next start`
+├── launch-oculus0osint.ps1   Desktop launcher (Ollama + engine + app)
+└── OCULUS_PHASE*_REPORT.md   Per-phase delivery reports
+```
 
-- **[Plugin Quickstart Guide](docs/plugin-quickstart.md)**: Learn how to scaffold and link your first plugin using the `@worldwideview/cli`.
-- **[Advanced Plugin Guide](docs/plugin-advanced.md)**: Deep dive into microservice data seeders, WebSockets, complex 3D rendering, and Marketplace publishing.
+## Phase history
 
-## Upstream Compatibility
+This fork was rebuilt in phases. Each phase has a plan + report + verification evidence in the repo root.
 
-Oculus0Osint keeps the existing plugin compatibility contracts intact:
+| Phase | Subject | Report |
+| --- | --- | --- |
+| 1 | Local edition lockdown + telemetry strip | [OCULUS_PHASE1_REPORT.md](OCULUS_PHASE1_REPORT.md) |
+| 1.5 | Local Ollama on `C:\AI` + AUTH_TRUST_HOST + docs trim | (commit `e4f4833`) |
+| 2 | Plugin marketplace mirror | [OCULUS_PHASE2_REPORT.md](OCULUS_PHASE2_REPORT.md) |
+| 3 | Sovereign imagery default | [OCULUS_PHASE3_REPORT.md](OCULUS_PHASE3_REPORT.md) |
+| 4 | Local plugin data engine stub | [OCULUS_PHASE4_REPORT.md](OCULUS_PHASE4_REPORT.md) |
+| 5 | Stripe + Supabase rip-out | [OCULUS_PHASE5_REPORT.md](OCULUS_PHASE5_REPORT.md) |
+| 6 | `isCloud` cleanup | [OCULUS_PHASE6_REPORT.md](OCULUS_PHASE6_REPORT.md) |
 
-- **`@worldwideview/wwv-plugin-sdk`**: Shared SDK import path for plugin code.
-- **`WWV_*` environment variables**: Existing runtime and marketplace integration contracts.
-- **`wwv-data-engine`**: Existing compatible data backend naming.
+## Documentation
 
-## Development & Workflow
+- **[Project Overview](docs/project-overview.md)** — what this fork is and isn't.
+- **[Architecture](docs/ARCHITECTURE.md)** — DataBus, plugin lifecycle, render pipeline.
+- **[Build System](docs/build-system.md)** — pnpm workspace, Next.js standalone, Cesium asset pipeline.
+- **[Development](docs/development.md)** — coding conventions, Zustand slice patterns.
+- **[Deployment](docs/deployment.md)** — Docker / Coolify notes (cloud edition; local uses the PowerShell launcher).
+- **[Testing](docs/testing.md)** — Vitest setup.
+- **[Files Catalog](docs/files.md)** — annotated map of where things live.
 
-- **Branching & Commits:** We strictly enforce [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `refactor:`). Every commit should utilize our semantic versioning `[/commit]` workflow.
-- **Coding Standards:** We emphasize vanilla CSS (no Tailwind), strict TypeScript 5, and file modularity (max 150 lines per file).
-- **Testing:** We use Vitest with `jsdom`. All new core logic should be accompanied by tests, running via `pnpm test`.
+## Upstream compatibility
 
-See [Docs: Development](docs/development.md) and [Docs: Testing](docs/testing.md) for more details.
+The Oculus0Osint local edition deliberately preserves these surfaces:
 
-## Contributing
-
-We welcome community contributions! Please review our coding standards and PR processes before submitting code. For detailed instructions on local development and setting up your environment, see our [CONTRIBUTING.md](CONTRIBUTING.md).
+- `@worldwideview/*` package identifiers — kept as compatibility contracts.
+- `WWV_*` environment variable names — `WWV_BRIDGE_TOKEN`, `WWV_REGISTRY_URL`, `WWV_SKIP_DEFAULT_PLUGINS`, `WWV_DEMO_ADMIN_SECRET`, `WWV_SKIP_LOCAL_DB` — all still honored.
+- Default marketplace + registry URL constants in code (`https://marketplace.worldwideview.dev`, `wss://dataengine.worldwideview.dev/stream`). The env overrides redirect runtime to local equivalents; defaults remain valid for any operator who wants the upstream cloud path.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-See [NOTICE.md](NOTICE.md) for the Oculus0Osint fork notice.
-
-## Documentation Index
-
-Explore our comprehensive documentation suite for detailed engineering insights:
-
-- **[Project Overview](docs/project-overview.md)**: High-level value proposition and technology stack.
-- **[Architecture](docs/architecture.md)**: DataBus event stream and Zustand state management.
-- **[Build System](docs/build-system.md)**: Monorepo structure, Next.js standalone output, and Docker builds.
-- **[Development](docs/development.md)**: Coding conventions and common implementation patterns.
-- **[Testing](docs/testing.md)**: Vitest setup and coverage targets.
-- **[Deployment](docs/deployment.md)**: Coolify integration and persistent volumes.
-- **[Files Catalog](docs/files.md)**: Comprehensive mapping of core source files.
+MIT — see [LICENSE](LICENSE). See [NOTICE.md](NOTICE.md) for the Oculus0Osint fork notice.
 
 > [!IMPORTANT]
-> **Fair-Use Notice:** This application may contain copyrighted material the use of which has not always been specifically authorized by the copyright owner. Such material is made available for educational purposes, situational awareness, and to advance understanding of global events under "fair use" (Section 107 of the US Copyright Law).
+> **Fair-Use Notice:** This application may visualize copyrighted material whose use has not always been specifically authorized by the copyright owner. Such material is made available for educational, situational-awareness, and global-events-understanding purposes under "fair use" (Section 107 of the US Copyright Law).

@@ -52,7 +52,7 @@ When marking a phase done, append a one-line note with the commit SHA and any ho
 - Deliverables: `OCULUS_PHASE6_PLAN.md`, `OCULUS_PHASE6_REPORT.md`, `_phase6_verification/`.
 
 ### Phase 7 — Docs WWV → Oculus0Osint completion pass
-**Status:** pending
+**Status:** done
 **Estimated:** 45–60 minutes
 **Risk:** low, prose-only
 **Scope:**
@@ -104,3 +104,4 @@ These are tracked here so the loop sees them as deliberately deferred, not forgo
 
 - 2026-05-25 — Plan created.
 - 2026-05-25 — Phase 6 complete. Apex-redirect to `worldwideview.dev/hub` removed; tenant subdomain matcher generalized away from `.app.worldwideview.dev`; `isCloud` constant retained with doc-comment for future ARGOS coupling. Gate F still clean (0/83 off-site). Commit pending push.
+- 2026-05-25 — Phase 7 complete. README + CONTRIBUTING + ROADMAP fully rewritten for the local-edition sovereign stack. docs/build-system, deployment, development, files updated with Phase 4 stub notes. Remaining WWV refs are intentional doctrine-surface mentions.

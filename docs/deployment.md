@@ -11,7 +11,7 @@ Oculus0Osint utilizes a containerized deployment strategy based on Docker's mult
 - **Static Assets:** Cesium static workers are injected at build time via `scripts/copy-cesium.mjs`.
 
 ### Data Engine Runner
-- The generic `wwv-data-engine` runner is deployed as a single Coolify service, orchestrating telemetry data by executing lightweight scripts from volume-mounted seeder directories.
+- The upstream `wwv-data-engine` runner is deployed as a single Coolify service, orchestrating telemetry data by executing lightweight scripts from volume-mounted seeder directories. **In this fork's local edition** the data engine is replaced by a Node.js stub (`scripts/local-data-engine.mjs`, see `OCULUS_PHASE4_REPORT.md`) — the Coolify path below is the cloud-edition deployment shape.
 
 ## Platform Deployment
 

@@ -21,7 +21,10 @@ The system is highly modularized to separate React UI rendering from heavy Cesiu
 ## Build System
 - `package.json` - Root monorepo configuration with `pnpm` workspace bindings.
 - `next.config.ts` - Next.js compiler settings, security headers, and standalone output configuration.
-- `docker-compose.yml` - Defines the orchestration of the frontend, Redis cache, and the generic data engine runner (`wwv-data-engine`) loaded with local seeders.
+- `docker-compose.yml` - Defines the orchestration of the frontend, Postgres, and (cloud-edition) Redis cache + `wwv-data-engine` runner. **This fork's local edition** runs only Postgres via this file; the data engine is a Node.js stub at `scripts/local-data-engine.mjs` (Phase 4).
+- `scripts/local-data-engine.mjs` - Phase 4 Node http + WebSocket stub on `:5000` that replaces the upstream `wwv-data-engine` for the sovereign local edition. Translates Oculus's own `/api/*` endpoints into the engine wire protocol.
+- `scripts/sync-plugin-mirror.mjs` - Phase 2 one-time operation that mirrors the upstream WWV marketplace registry + plugin bundles into `public/wwv-mirror/`. Run by the owner; runtime never reaches out.
+- `launch-oculus0osint.ps1` - Desktop launcher that starts Ollama, the data engine stub, and the Oculus0Osint app in one shot.
 
 ## Configuration
 - `prisma/schema.prisma` - PostgreSQL database schema for storing user settings and installed plugin manifests.
