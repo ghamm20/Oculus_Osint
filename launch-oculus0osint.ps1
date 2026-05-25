@@ -128,11 +128,13 @@ Start-DataEngineIfNeeded
 
 # Local edition is the doctrine. Do NOT override with demo here —
 # demo disables auth, history, and settings.
-# AUTH_TRUST_HOST is set here (not in .env.local) because it is a
-# host-policy knob coupled to HOSTNAME=0.0.0.0; both belong together.
+# Phase 8: bind to 127.0.0.1 (loopback only). This fork is operated as
+# a sovereign single-user local edition; no need to listen on 0.0.0.0.
+# AUTH_TRUST_HOST is no longer set because NextAuth accepts localhost
+# without the trust flag — the only reason we needed it before was the
+# 0.0.0.0 bind. Same change in .claude/launch.json.
 $env:PORT = $port
-$env:HOSTNAME = "0.0.0.0"
-$env:AUTH_TRUST_HOST = "true"
+$env:HOSTNAME = "127.0.0.1"
 $env:NEXT_PUBLIC_WWV_EDITION = "local"
 # Phase 2 — point the marketplace + registry URLs at the local mirror.
 # Mirror lives at public/wwv-mirror/ and is populated by
@@ -149,8 +151,7 @@ Write-Host "Log:  $serverLog"
 $serverCommand = @"
 Set-Location -LiteralPath '$repoRoot'
 `$env:PORT='$port'
-`$env:HOSTNAME='0.0.0.0'
-`$env:AUTH_TRUST_HOST='true'
+`$env:HOSTNAME='127.0.0.1'
 `$env:NEXT_PUBLIC_WWV_EDITION='local'
 `$env:NEXT_PUBLIC_MARKETPLACE_URL='http://localhost:$port/wwv-mirror'
 `$env:WWV_REGISTRY_URL='http://localhost:$port/wwv-mirror/api/registry'
