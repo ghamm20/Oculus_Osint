@@ -42,7 +42,19 @@ export const edition: Edition = resolveEdition(
 /** True when running as a self-hosted local instance. */
 export const isLocal: boolean = edition === "local";
 
-/** True when running as a managed cloud instance. */
+/**
+ * True when running as a managed cloud instance.
+ *
+ * Phase 5 removed Stripe + Supabase scaffolding; Phase 6 removed the
+ * apex-redirect to upstream WWV. As a result, this fork's `cloud`
+ * edition is functionally identical to `local` — same JWT credentials
+ * auth, same local Postgres, same plugin mirror, same data engine stub.
+ *
+ * The constant is retained so the tenant-subdomain hook in `proxy.ts`
+ * stays wired for future ARGOS coupling decisions (sixth interface vs
+ * map pane — still owner-pending). When that decision lands, the
+ * cloud edition becomes the natural seat for the ARGOS-coupled mode.
+ */
 export const isCloud: boolean = edition === "cloud";
 
 /** True when running as the public demo instance. */

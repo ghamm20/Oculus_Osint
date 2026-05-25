@@ -39,7 +39,7 @@ When marking a phase done, append a one-line note with the commit SHA and any ho
 ## Phase backlog
 
 ### Phase 6 — `isCloud` + tri-state edition cleanup
-**Status:** pending
+**Status:** done
 **Estimated:** 60–75 minutes
 **Risk:** low, mechanical
 **Scope:**
@@ -103,3 +103,4 @@ These are tracked here so the loop sees them as deliberately deferred, not forgo
 (Each loop iteration appends a line here.)
 
 - 2026-05-25 — Plan created.
+- 2026-05-25 — Phase 6 complete. Apex-redirect to `worldwideview.dev/hub` removed; tenant subdomain matcher generalized away from `.app.worldwideview.dev`; `isCloud` constant retained with doc-comment for future ARGOS coupling. Gate F still clean (0/83 off-site). Commit pending push.

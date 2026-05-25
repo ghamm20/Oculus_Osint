@@ -39,15 +39,27 @@ async function resolveWorkspace(subdomain: string) {
 export default async function proxy(req: NextRequest) {
     const path = req.nextUrl.pathname;
     
-    // Extract subdomain if on cloud
+    // Tenant subdomain extraction — dormant in this fork's local edition.
+    // Kept as an architectural hook for future ARGOS coupling (per the
+    // Phase-2/3/4 reports the coupling decision is still owner-pending).
+    // Cloud edition was the prior caller of this code; post-Phase-5
+    // cloud has no distinct behavior in this fork, so the gate is removed
+    // and tenant extraction simply never finds a subdomain on localhost.
     const hostname = req.headers.get("host") || "";
     let tenantSubdomain = null;
     const isCloudDeploy = process.env.NEXT_PUBLIC_WWV_EDITION === "cloud";
-    
+
     if (isCloudDeploy) {
-        const isApp = hostname.includes(".app.worldwideview.dev") || hostname.includes(".localhost");
-        if (isApp) {
-            const subdomain = hostname.replace(".app.worldwideview.dev", "").replace(".localhost", "").split(":")[0];
+        // Tenant subdomain pattern is .app.<host>; this fork retains the
+        // matcher in case ARGOS or a downstream cloud deploy reintroduces
+        // multi-tenancy. The hardcoded WWV apex host has been replaced
+        // with a generic ".app." match so this fork doesn't reference
+        // upstream WWV branding at runtime.
+        if (hostname.includes(".app.") || hostname.includes(".localhost")) {
+            const subdomain = hostname
+                .replace(/\.app\.[^.:]+(\.[^.:]+)*/, "")
+                .replace(".localhost", "")
+                .split(":")[0];
             if (subdomain && subdomain !== "app" && subdomain !== "localhost") {
                 tenantSubdomain = subdomain;
             }
@@ -99,13 +111,11 @@ export default async function proxy(req: NextRequest) {
         return res;
     }
 
-    // Root Domain (Control Plane) Routing
-    if (isCloudDeploy && !tenantSubdomain) {
-        // Redirect apex app domain to the external marketing/hub site
-        if (path === "/" || path === "/register" || path === "/dashboard" || path === "/create-workspace") {
-            return NextResponse.redirect("https://worldwideview.dev/hub");
-        }
-    }
+    // Apex-domain marketing redirect to worldwideview.dev/hub was here
+    // (Phase 6 removed it). This fork's local edition has no marketing
+    // hub to redirect to; a cloud deploy of this fork would want its own
+    // apex behavior, set via env or middleware override rather than
+    // hardcoded WWV branding. Owner adds back as needed.
 
     // Check JWT session from Auth.js cookie.
     // Behind a TLS-terminating reverse proxy, the cookie was set with the
