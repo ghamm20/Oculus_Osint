@@ -4,14 +4,17 @@ $ErrorActionPreference = "Stop"
 # Oculus0Osint desktop launcher
 # ============================================================
 # This is the single entry point for a one-click start of the
-# Oculus0Osint local edition. It is doctrine-aligned for Phase 1:
+# Oculus0Osint local edition. Doctrine state after Phase 1-7 + Task 2:
 #   - Edition: local (no demo override)
 #   - Port:    3010 (sticky)
-#   - Host:    0.0.0.0 (LAN-reachable) + AUTH_TRUST_HOST=true
-#   - Ollama:  127.0.0.1:11434, model store at C:\AI\OCULUSBOUND\ollama-models
-# All side-state (logs, audit, model store) lives under C:\AI\OCULUSBOUND
-# so the entire stack relocates as a single tree when C:\AI eventually
-# migrates to F:\, or junctions into ARGOS when those are merged.
+#   - Host:    127.0.0.1 (loopback only)
+#   - Ollama:  127.0.0.1:11434, default model store (~/.ollama/models)
+# ARGOS coupling (decided): ARGOS owns the Ollama lifecycle. The
+# Ollama-autostart in this script is a Phase-1.5 holdover; once Phase 8
+# lands, Start-OllamaIfNeeded becomes a health-check (probe + warn,
+# don't start). The C:\AI\OCULUSBOUND\ollama-models directory was the
+# Phase-1.5 dedicated store; it is no longer in use (live Ollama uses
+# the default store) and is a cleanup candidate.
 
 $repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $port = "3010"
@@ -20,9 +23,12 @@ $logDir = Join-Path $repoRoot "logs"
 $serverLog = Join-Path $logDir "desktop-launch-3010.log"
 $ollamaLog = Join-Path $logDir "ollama-oculus.log"
 
-# Ollama configuration — co-located with the Oculus working tree
+# Ollama configuration — default model store (~/.ollama/models)
+# ARGOS coupling decision: ARGOS owns Ollama lifecycle. The Phase-1.5
+# dedicated store at C:\AI\OCULUSBOUND\ollama-models is no longer in
+# use; this launcher uses the default Ollama store where ARGOS personas
+# (incl. alfaxad/wild-gemma4:e4b) actually live.
 $ollamaExe = "$env:LOCALAPPDATA\Programs\Ollama\ollama.exe"
-$ollamaModels = "C:\AI\OCULUSBOUND\ollama-models"
 $ollamaHost = "127.0.0.1:11434"
 $ollamaPort = "11434"
 
@@ -87,13 +93,9 @@ function Start-OllamaIfNeeded {
         Write-Warning "Ollama: binary not found at $ollamaExe. Oculus Analyst panel will report offline."
         return
     }
-    if (-not (Test-Path -LiteralPath $ollamaModels)) {
-        Write-Warning "Ollama: model store $ollamaModels does not exist. Daemon will start but have no models."
-    }
-    Write-Host "Ollama: starting daemon at $ollamaHost (models: $ollamaModels)"
+    Write-Host "Ollama: starting daemon at $ollamaHost (default model store)"
     $launchScript = @"
 `$env:OLLAMA_HOST = '$ollamaHost'
-`$env:OLLAMA_MODELS = '$ollamaModels'
 & '$ollamaExe' serve *>> '$ollamaLog'
 "@
     Start-Process -FilePath "powershell.exe" -ArgumentList @(
