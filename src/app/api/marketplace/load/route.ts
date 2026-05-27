@@ -28,9 +28,11 @@ export async function GET(request: Request) {
     // Seed default plugins on fresh installs (idempotent — runs once)
     await seedDefaultPlugins();
 
-    // On demo, all installed plugins are visible to everyone (admin vetted them)
+    // On demo, all installed plugins are visible to everyone (admin vetted them).
+    // Read-only endpoint: opt into WWV_DEV_NO_AUTH bypass so plugin bundles
+    // (camera, etc.) can load during the dev build window without a session.
     if (!isDemo) {
-        const authError = await validateMarketplaceAuth(request);
+        const authError = await validateMarketplaceAuth(request, { allowDevBypass: true });
         if (authError) return withCors(authError, request);
     }
 

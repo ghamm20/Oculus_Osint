@@ -15,11 +15,13 @@ export async function GET(request: Request) {
     const rateLimited = marketplaceApiLimiter.check(getClientIp(request));
     if (rateLimited) return withCors(rateLimited, request);
 
-    // In demo mode, the plugin list is public (read-only for non-admins)
-    // For local/cloud, we continue to enforce authentication
+    // In demo mode, the plugin list is public (read-only for non-admins).
+    // For local/cloud, we continue to enforce authentication on this list,
+    // but read-only endpoints opt into the WWV_DEV_NO_AUTH dev bypass so the
+    // status poll keeps working during the build window without a session.
 
     if (!isDemo) {
-        const authError = await validateMarketplaceAuth(request);
+        const authError = await validateMarketplaceAuth(request, { allowDevBypass: true });
         if (authError) return withCors(authError, request);
     }
 
@@ -34,6 +36,9 @@ export async function GET(request: Request) {
 
         let canManagePlugins = !isDemo;
         if (isDemo) {
+            // Demo's "can manage" probe checks for an actual session, so do NOT
+            // allow the dev bypass here — it would falsely advertise manage
+            // permissions to anonymous demo visitors.
             const authError = await validateMarketplaceAuth(request);
             canManagePlugins = authError === null;
         }
@@ -46,7 +51,7 @@ export async function GET(request: Request) {
             const authError = await validateMarketplaceAuth(request);
             canManagePlugins = authError === null;
         }
-        
+
         return withCors(NextResponse.json({ plugins: [], canManagePlugins }), request);
     }
 }
