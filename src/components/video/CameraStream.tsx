@@ -8,7 +8,13 @@ import { isHlsUrl, isKnownVideoPlatform, getYouTubeEmbedUrl, getStreamErrorMessa
 import { PannableView } from "@/components/common/PannableView";
 
 interface CameraStreamProps {
-    streamUrl: string;
+    /**
+     * Stream URL. May be null/undefined when an entity has no upstream image
+     * (some adapters emit cameras without a usable feed). When falsy, the
+     * component renders nothing — the caller should not include it in the
+     * detail layout at all.
+     */
+    streamUrl: string | null | undefined;
     previewUrl?: string;
     isIframe?: boolean;
     label?: string;
@@ -19,6 +25,16 @@ interface CameraStreamProps {
 export const CameraStream: React.FC<CameraStreamProps> = ({
     streamUrl, previewUrl, isIframe = false, label, className = "", id,
 }) => {
+    // Fix A — guard against null/empty streamUrl.
+    // Placed before any hook so the useEffect below never sees a null value
+    // (the prior bug: `streamUrl.includes("balticlivecam.com")` threw
+    // TypeError when streamUrl was null, the plugin error boundary swallowed
+    // it, and the detail pane collapsed silently).
+    // Returning null here is safe because CameraDetail constructs a fresh
+    // CameraStream instance per entity; a given instance has stable props
+    // for the lifetime of its mount, so hook ordering stays consistent.
+    if (!streamUrl) return null;
+
     const { addFloatingStream } = useStore();
     const [isPlaying, setIsPlaying] = useState(false);
     const [isLoading, setIsLoading] = useState(false);

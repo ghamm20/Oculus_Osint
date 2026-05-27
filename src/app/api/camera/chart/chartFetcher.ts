@@ -57,12 +57,16 @@ function toGeoJsonFeature(c: ChartCamera): GdotCameraFeature | null {
 
     const route = routeName(c);
     const categories = Array.isArray(c.cameraCategories) ? c.cameraCategories : [];
+    const stream = c.publicVideoURL ?? "";
+
+    // Fix B — drop entities with no usable stream URL.
+    if (!stream) return null;
 
     return {
         type: "Feature",
         geometry: { type: "Point", coordinates: [lon, lat] },
         properties: {
-            stream: c.publicVideoURL ?? "",
+            stream,
             hls: null,
             country: "United States",
             region: categories.join(", ") || "Maryland",
@@ -97,6 +101,14 @@ export async function fetchChartCameras(): Promise<GdotCameraFeature[]> {
     for (const item of data) {
         const feature = toGeoJsonFeature(item as ChartCamera);
         if (feature) cameras.push(feature);
+    }
+
+    // Fix B — surface adapter-level filtering count.
+    const skipped = data.length - cameras.length;
+    if (skipped > 0) {
+        console.info(
+            `[chart-md] skipped ${skipped} of ${data.length} upstream rows (offline / no stream URL / bad coords)`,
+        );
     }
 
     return cameras;

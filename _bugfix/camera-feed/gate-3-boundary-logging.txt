@@ -1,0 +1,74 @@
+Gate 3 — PluginErrorBoundary logging verification
+==================================================
+
+Verification mode: static (per execution brief — "No DevTools repro needed
+— static analysis is conclusive"). Live-trigger test deferred to Gate 4
+smoke run when the app is next started; deliberate-throw injection
+intentionally NOT performed because (a) the brief forbade refactoring the
+error boundary beyond adding console.error, and (b) the deliberate-throw
+injection would itself violate the "no debug code in commit" constraint
+if not removed cleanly. The post-fix boundary is identical at the level of
+behavior whether it catches the original null-deref crash or any other
+throw — same code path runs.
+
+Code reviewed: src/components/common/PluginErrorBoundary.tsx (Fix C)
+
+Old behavior (pre-Fix C):
+    componentDidCatch(error, errorInfo) {
+        console.error(
+            `[PluginErrorBoundary] Plugin component '${this.props.pluginId}' crashed during render and was isolated:`,
+            error,
+        );
+    }
+  → Logged: plugin id + raw Error object only. componentStack hidden.
+
+New behavior (post-Fix C):
+    componentDidCatch(error, errorInfo) {
+        console.error(
+            `[PluginErrorBoundary] Plugin component '${this.props.pluginId}' crashed during render and was isolated:`,
+            error,
+        );
+        if (errorInfo?.componentStack) {
+            console.error(
+                `[PluginErrorBoundary] Component stack for '${this.props.pluginId}':`,
+                errorInfo.componentStack,
+            );
+        }
+    }
+  → Logs the same first line (existing log-grep patterns keep working)
+  → PLUS a second line with errorInfo.componentStack when available
+  → componentStack is the React component tree path showing exactly where
+    in the plugin's tree the throw happened — previously hidden.
+
+What a future operator would see if the camera plugin were ever to crash
+again (e.g. some unrelated property deref blows up):
+
+    [PluginErrorBoundary] Plugin component 'camera' crashed during render and was isolated: TypeError: <message>
+        at <stack frames>
+    [PluginErrorBoundary] Component stack for 'camera':
+        in CameraStream (created by CameraDetail)
+        in CameraDetail (created by IntelTab)
+        in PluginErrorBoundary (created by IntelTab)
+        ...
+
+This is the diagnostic improvement Fix C delivers: when a future plugin
+crash happens, the operator gets the React tree path, not just the raw
+error. The previous null-deref bug took an external static analysis pass
+to pin down because componentStack was being thrown away.
+
+Static checks passed:
+  [✓] componentDidCatch signature unchanged (Error, ErrorInfo)
+  [✓] First console.error line is byte-identical to pre-fix (greppable)
+  [✓] errorInfo?.componentStack guard prevents log spam if React ever
+      passes errorInfo without componentStack (defensive, future-proof)
+  [✓] render() method unchanged — still returns null on hasError, still
+      isolates the crash, still keeps the rest of the panel alive
+  [✓] No new dependencies
+  [✓] No visual UI changes
+  [✓] Boundary catches synchronous render errors (which is exactly what
+      Fix A removes — null.includes() throw at first useEffect was a
+      render-phase exception in React 18 strict-mode interpretation; the
+      boundary correctly catches it)
+
+Live verification deferred to: gate-4-working-feed evidence (see
+gate-4-working-feed.md for state).

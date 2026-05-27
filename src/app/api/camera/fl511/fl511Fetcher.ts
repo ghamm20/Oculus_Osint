@@ -46,6 +46,9 @@ function toGeoJsonFeature(c: Fl511Camera): GdotCameraFeature | null {
     const hls = c.VideoUrl ?? null;
     const stream = hls || c.ImageUrl || c.Url || "";
 
+    // Fix B — drop entities with no usable stream URL.
+    if (!stream) return null;
+
     return {
         type: "Feature",
         geometry: { type: "Point", coordinates: [lon, lat] },
@@ -87,5 +90,14 @@ export async function fetchFl511Cameras(): Promise<GdotCameraFeature[]> {
         const feature = toGeoJsonFeature(item);
         if (feature) cameras.push(feature);
     }
+
+    // Fix B — surface adapter-level filtering count.
+    const skipped = data.length - cameras.length;
+    if (skipped > 0) {
+        console.info(
+            `[fl511] skipped ${skipped} of ${data.length} upstream rows (disabled / blocked / no stream URL)`,
+        );
+    }
+
     return cameras;
 }

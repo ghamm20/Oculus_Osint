@@ -44,6 +44,9 @@ function toFeature(camera: OhgoCamera, view: OhgoCameraView, index: number): Gdo
     const route = view.MainRoute || "";
     const direction = view.Direction || "";
 
+    // Fix B — drop entities with no usable stream URL.
+    if (!stream) return null;
+
     return {
         type: "Feature",
         geometry: { type: "Point", coordinates: [lon, lat] },
@@ -85,15 +88,25 @@ export async function fetchOhgoCameras(): Promise<GdotCameraFeature[]> {
 
     const cameras = asArray(await res.json());
     const features: GdotCameraFeature[] = [];
+    let upstreamViewCount = 0;
 
     for (const camera of cameras) {
         const views = Array.isArray(camera.CameraViews) && camera.CameraViews.length > 0
             ? camera.CameraViews
             : [{}];
+        upstreamViewCount += views.length;
         views.forEach((view, index) => {
             const feature = toFeature(camera, view, index);
             if (feature) features.push(feature);
         });
+    }
+
+    // Fix B — surface adapter-level filtering count.
+    const skipped = upstreamViewCount - features.length;
+    if (skipped > 0) {
+        console.info(
+            `[ohgo] skipped ${skipped} of ${upstreamViewCount} upstream camera views (no stream URL / bad coords)`,
+        );
     }
 
     return features;

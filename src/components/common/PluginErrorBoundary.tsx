@@ -21,7 +21,26 @@ export class PluginErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error(`[PluginErrorBoundary] Plugin component '${this.props.pluginId}' crashed during render and was isolated:`, error);
+    // Fix C — surface the caught error with full context. Render still
+    // returns null so the rest of the panel keeps working, but the
+    // operator gets:
+    //   1. A clear log prefix tagging the plugin that crashed
+    //   2. The Error object (name, message, stack)
+    //   3. The React component stack from errorInfo, which tells us
+    //      *where in the plugin's component tree* the throw happened
+    //      (previously hidden — only the raw Error was logged).
+    // The two-line format keeps the existing log shape stable for
+    // anyone grepping logs while adding the componentStack underneath.
+    console.error(
+      `[PluginErrorBoundary] Plugin component '${this.props.pluginId}' crashed during render and was isolated:`,
+      error,
+    );
+    if (errorInfo?.componentStack) {
+      console.error(
+        `[PluginErrorBoundary] Component stack for '${this.props.pluginId}':`,
+        errorInfo.componentStack,
+      );
+    }
   }
 
   public render() {

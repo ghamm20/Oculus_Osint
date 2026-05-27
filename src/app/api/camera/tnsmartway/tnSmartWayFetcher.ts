@@ -88,6 +88,10 @@ function toGeoJsonFeature(camera: SmartWayCamera): CameraFeature | null {
     const hls = getString(camera.httpsVideoUrl) || getString(camera.httpVideoUrl) || null;
     const thumbnail = getString(camera.thumbnailUrl);
     const stream = hls || thumbnail || null;
+
+    // Fix B — drop entities with no usable stream URL.
+    if (!stream) return null;
+
     const jurisdiction = getString(camera.jurisdiction);
     const route = getString(camera.route);
     const mileMarker = getString(camera.mileMarker);
@@ -143,6 +147,14 @@ export async function fetchTnSmartWayCameras(): Promise<CameraFeature[]> {
     for (const item of data) {
         const feature = toGeoJsonFeature(item as SmartWayCamera);
         if (feature) cameras.push(feature);
+    }
+
+    // Fix B — surface adapter-level filtering count.
+    const skipped = data.length - cameras.length;
+    if (skipped > 0) {
+        console.info(
+            `[tn-smartway] skipped ${skipped} of ${data.length} upstream rows (inactive / no stream URL / bad coords)`,
+        );
     }
 
     return cameras;

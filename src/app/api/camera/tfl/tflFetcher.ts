@@ -26,11 +26,16 @@ function toGeoJsonFeature(raw: any): GdotCameraFeature | null {
 
     if (available === "false") return null;
 
+    const stream = videoUrl || imageUrl || "";
+
+    // Fix B — drop entities with no usable stream URL.
+    if (!stream) return null;
+
     return {
         type: "Feature",
         geometry: { type: "Point", coordinates: [raw.lon, raw.lat] },
         properties: {
-            stream: videoUrl || imageUrl || "",
+            stream,
             hls: null,
             country: "United Kingdom",
             region: "London",
@@ -60,6 +65,14 @@ export async function fetchTflCameras(): Promise<GdotCameraFeature[]> {
     for (const place of data) {
         const feature = toGeoJsonFeature(place);
         if (feature) cameras.push(feature);
+    }
+
+    // Fix B — surface adapter-level filtering count.
+    const skipped = data.length - cameras.length;
+    if (skipped > 0) {
+        console.info(
+            `[tfl] skipped ${skipped} of ${data.length} upstream rows (unavailable / no stream URL / bad coords)`,
+        );
     }
 
     return cameras;

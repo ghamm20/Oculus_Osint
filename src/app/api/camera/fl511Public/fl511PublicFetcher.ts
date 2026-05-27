@@ -60,14 +60,20 @@ function toGeoJsonFeature(raw: ArcGisFeature): CameraFeature | null {
     const image = getString(a.IMAGE);
     const timestamp = parseFlTimestamp(a.TIMESTAMP);
 
+    // Fix B — drop entities with no usable stream URL at the adapter level.
+    // FDOT's IMAGE field is sparsely populated; emitting these creates
+    // useless clickable dots on the globe whose detail pane previously
+    // crashed in CameraStream's first useEffect.
+    if (!image) return null;
+
     return {
         type: "Feature",
         geometry: { type: "Point", coordinates: [lon as number, lat as number] },
         properties: {
             id,
-            stream: image || null,
+            stream: image,
             hls: null,
-            streamType: image ? "image" : null,
+            streamType: "image",
             country: "United States",
             region: county ? `${county} County, Florida` : "Florida",
             city: county || "Florida",
@@ -91,6 +97,7 @@ export async function fetchFl511PublicCameras(): Promise<CameraFeature[]> {
     const all: CameraFeature[] = [];
     let offset = 0;
     let hasMore = true;
+    let upstreamCount = 0;
 
     while (hasMore) {
         const params = new URLSearchParams({
@@ -115,6 +122,7 @@ export async function fetchFl511PublicCameras(): Promise<CameraFeature[]> {
         const json = await res.json();
         const features = Array.isArray(json.features) ? json.features as ArcGisFeature[] : [];
 
+        upstreamCount += features.length;
         for (const feature of features) {
             const converted = toGeoJsonFeature(feature);
             if (converted) all.push(converted);
@@ -122,6 +130,15 @@ export async function fetchFl511PublicCameras(): Promise<CameraFeature[]> {
 
         hasMore = json.exceededTransferLimit === true && features.length > 0;
         offset += features.length;
+    }
+
+    // Fix B — surface adapter-level filtering so operators can see how many
+    // upstream rows were dropped (usually rows missing the IMAGE field).
+    const skipped = upstreamCount - all.length;
+    if (skipped > 0) {
+        console.info(
+            `[fl511-public] skipped ${skipped} of ${upstreamCount} upstream rows with no stream URL`,
+        );
     }
 
     return all;

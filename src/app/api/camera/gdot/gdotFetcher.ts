@@ -20,11 +20,16 @@ function toGeoJsonFeature(raw: any): GdotCameraFeature | null {
     const { attributes: a, geometry: g } = raw;
     if (!g?.x || !g?.y) return null;
 
+    const stream = a.HLS || a.url || "";
+
+    // Fix B — drop entities with no usable stream URL.
+    if (!stream) return null;
+
     return {
         type: "Feature",
         geometry: { type: "Point", coordinates: [g.x, g.y] },
         properties: {
-            stream: a.HLS || a.url || "",
+            stream,
             hls: a.HLS || null,
             country: "United States",
             region: `${a.county || ""} County, Georgia`,
@@ -44,6 +49,7 @@ export async function fetchGdotCameras(): Promise<GdotCameraFeature[]> {
     const all: GdotCameraFeature[] = [];
     let offset = 0;
     let hasMore = true;
+    let upstreamCount = 0;
 
     while (hasMore) {
         const params = new URLSearchParams({
@@ -64,6 +70,7 @@ export async function fetchGdotCameras(): Promise<GdotCameraFeature[]> {
         const json = await res.json();
         const features = json.features || [];
 
+        upstreamCount += features.length;
         for (const f of features) {
             const converted = toGeoJsonFeature(f);
             if (converted) all.push(converted);
@@ -71,6 +78,14 @@ export async function fetchGdotCameras(): Promise<GdotCameraFeature[]> {
 
         hasMore = json.exceededTransferLimit === true;
         offset += features.length;
+    }
+
+    // Fix B — surface adapter-level filtering count.
+    const skipped = upstreamCount - all.length;
+    if (skipped > 0) {
+        console.info(
+            `[gdot] skipped ${skipped} of ${upstreamCount} upstream rows (no stream URL / bad coords)`,
+        );
     }
 
     return all;

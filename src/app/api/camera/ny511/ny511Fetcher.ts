@@ -38,12 +38,16 @@ function toGeoJsonFeature(c: Ny511Camera): GdotCameraFeature | null {
     if (typeof c.Latitude !== "number" || typeof c.Longitude !== "number") return null;
 
     const hls = c.VideoUrl ?? null;
+    const stream = hls || c.Url || "";
+
+    // Fix B — drop entities with no usable stream URL.
+    if (!stream) return null;
 
     return {
         type: "Feature",
         geometry: { type: "Point", coordinates: [c.Longitude, c.Latitude] },
         properties: {
-            stream: hls || c.Url || "",
+            stream,
             hls,
             country: "United States",
             region: "New York",
@@ -76,5 +80,14 @@ export async function fetch511NyCameras(): Promise<GdotCameraFeature[]> {
         const f = toGeoJsonFeature(c as Ny511Camera);
         if (f) cameras.push(f);
     }
+
+    // Fix B — surface adapter-level filtering count.
+    const skipped = data.length - cameras.length;
+    if (skipped > 0) {
+        console.info(
+            `[ny511] skipped ${skipped} of ${data.length} upstream rows (disabled / blocked / no stream URL)`,
+        );
+    }
+
     return cameras;
 }

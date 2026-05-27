@@ -26,12 +26,16 @@ function toGeoJsonFeature(raw: any): GdotCameraFeature | null {
 
     const hls = cam.imageData?.streamingVideoURL || null;
     const jpeg = cam.imageData?.static?.currentImageURL || "";
+    const stream = hls || jpeg;
+
+    // Fix B — drop entities with no usable stream URL.
+    if (!stream) return null;
 
     return {
         type: "Feature",
         geometry: { type: "Point", coordinates: [lon, lat] },
         properties: {
-            stream: hls || jpeg,
+            stream,
             hls,
             country: "United States",
             region: `District ${cam.location.district}, California`,
@@ -48,6 +52,7 @@ function toGeoJsonFeature(raw: any): GdotCameraFeature | null {
 
 /** Fetch all Caltrans cameras across all 12 districts in parallel. */
 export async function fetchCaltransCameras(): Promise<GdotCameraFeature[]> {
+    let upstreamCount = 0;
     const results = await Promise.allSettled(
         DISTRICTS.map(async (d) => {
             const res = await fetch(districtUrl(d), {
@@ -58,6 +63,7 @@ export async function fetchCaltransCameras(): Promise<GdotCameraFeature[]> {
             if (!Array.isArray(json.data)) return [];
             const cameras: GdotCameraFeature[] = [];
             for (const item of json.data) {
+                upstreamCount += 1;
                 const f = toGeoJsonFeature(item);
                 if (f) cameras.push(f);
             }
@@ -65,7 +71,17 @@ export async function fetchCaltransCameras(): Promise<GdotCameraFeature[]> {
         }),
     );
 
-    return results
+    const all = results
         .filter((r): r is PromiseFulfilledResult<GdotCameraFeature[]> => r.status === "fulfilled")
         .flatMap((r) => r.value);
+
+    // Fix B — adapter-level filter count (includes offline + no-stream drops).
+    const skipped = upstreamCount - all.length;
+    if (skipped > 0) {
+        console.info(
+            `[caltrans] skipped ${skipped} of ${upstreamCount} upstream rows (offline / no stream URL)`,
+        );
+    }
+
+    return all;
 }
