@@ -1,0 +1,21 @@
+=== Gate B — non-media upstream (example.com returns HTML) ===
+REQUEST: GET /api/camera/proxy/stream?url=https://example.com
+
+=== Response headers ===
+HTTP/1.1 502 Bad Gateway
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; img-src 'self' data: blob: http: https:; connect-src 'self' http: https: ws: wss:; media-src 'self' blob: http: https:; frame-src 'self' http: https: blob:; worker-src 'self' blob:; frame-ancestors 'none'
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
+X-DNS-Prefetch-Control: on
+Permissions-Policy: camera=(), microphone=(), geolocation=(self)
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch
+content-type: application/json
+Date: Thu, 28 May 2026 13:25:39 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+Transfer-Encoding: chunked
+
+
+=== Response body ===
+{"error":"Upstream returned non-media content","upstream_content_type":"text/html"}

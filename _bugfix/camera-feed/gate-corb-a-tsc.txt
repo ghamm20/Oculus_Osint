@@ -1,0 +1,19 @@
+Gate A — TypeScript compile (post-CORB fix)
+============================================
+
+Command:
+  node_modules/.bin/tsc.cmd --noEmit -p tsconfig.json
+
+Exit code: 0
+Stdout / stderr: (no diagnostic output — clean compile)
+
+Scope of change:
+  src/app/api/camera/proxy/stream/route.ts
+
+PASS — no type errors introduced by the CORB content-type validation.
+
+Verification time:
+  Run via the project's local tsc against tsconfig.json. Same harness
+  pattern used for prior gates (camera-feed null-guard, marketplace
+  bypass, camera proxy bypass). All earlier commits still type-check
+  alongside this one.

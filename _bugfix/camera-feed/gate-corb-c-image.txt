@@ -1,0 +1,29 @@
+=== Gate C — known-good image upstream (httpbin /image/jpeg returns image/jpeg) ===
+REQUEST: GET /api/camera/proxy/stream?url=https://httpbin.org/image/jpeg
+
+=== Response headers ===
+HTTP/1.1 200 OK
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; img-src 'self' data: blob: http: https:; connect-src 'self' http: https: ws: wss:; media-src 'self' blob: http: https:; frame-src 'self' http: https: blob:; worker-src 'self' blob:; frame-ancestors 'none'
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
+X-DNS-Prefetch-Control: on
+Permissions-Policy: camera=(), microphone=(), geolocation=(self)
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch
+access-control-allow-methods: GET, OPTIONS
+access-control-allow-origin: *
+cache-control: no-store
+content-type: image/jpeg
+Date: Thu, 28 May 2026 13:25:56 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+Transfer-Encoding: chunked
+
+
+=== Body inspection ===
+-rw-r--r-- 1 Gordy 197121 35588 May 28 09:25 /tmp/_gate_c_body
+first 16 bytes (hex):
+00000000: ffd8 ffe0 0010 4a46 4946 0001 0102 001c  ......JFIF......
+
+JPEG magic check (expect 'ff d8 ff'):
+00000000: ffd8 ff                                  ...
