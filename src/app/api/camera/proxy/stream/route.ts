@@ -59,7 +59,19 @@ export async function GET(req: NextRequest) {
     if (isAuthEnabled) {
         const session = await auth();
         if (!session?.user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            // Dev bypass — matches the proxy.ts and validateMarketplaceAuth
+            // pattern (commits f946a5c, 068a274). Read-only relay for
+            // external camera image URLs; safe to expose under the same
+            // build-window opt-in. Warning fires on every bypassed request
+            // so the operator can't forget the flag is on.
+            if (process.env.WWV_DEV_NO_AUTH === "true") {
+                console.warn(
+                    "[camera/proxy/stream] WWV_DEV_NO_AUTH=true — bypassing auth for camera image fetch. " +
+                    "Unset this env to re-enable the auth gate.",
+                );
+            } else {
+                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            }
         }
     }
 

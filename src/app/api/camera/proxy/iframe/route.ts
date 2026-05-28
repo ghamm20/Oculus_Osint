@@ -18,7 +18,17 @@ export async function GET(req: NextRequest) {
     if (isAuthEnabled) {
         const session = await auth();
         if (!session?.user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            // Dev bypass — matches the proxy.ts and validateMarketplaceAuth
+            // pattern (commits f946a5c, 068a274). Iframe HTML relay for
+            // camera platforms; safe to expose under the same opt-in.
+            if (process.env.WWV_DEV_NO_AUTH === "true") {
+                console.warn(
+                    "[camera/proxy/iframe] WWV_DEV_NO_AUTH=true — bypassing auth for iframe HTML fetch. " +
+                    "Unset this env to re-enable the auth gate.",
+                );
+            } else {
+                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            }
         }
     }
 
