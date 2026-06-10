@@ -25,7 +25,7 @@ export function OculusAnalystPanel() {
 
     const statusLabel = useMemo(() => {
         if (status === "thinking") return "Thinking";
-        if (status === "offline") return "Ollama offline";
+        if (status === "offline") return "ARGOS offline";
         if (status === "error") return "Check failed";
         if (status === "online") return model ?? "Local LLM";
         return "Local LLM";
@@ -54,8 +54,8 @@ export function OculusAnalystPanel() {
             const data = await response.json();
             if (!response.ok) {
                 const fallback = data?.offline
-                    ? "Ollama is offline. Start Ollama or update LOCAL_LLM_BASE_URL."
-                    : data?.error ?? "The local assistant could not answer.";
+                    ? "ARGOS is offline or unreachable. Start ARGOS (port 7799) or set ARGOS_CHAT_URL."
+                    : data?.error ?? "The assistant could not answer.";
                 setStatus(data?.offline ? "offline" : "error");
                 setMessages((current) => [...current, { role: "assistant", content: fallback }]);
                 return;
@@ -73,7 +73,7 @@ export function OculusAnalystPanel() {
                 ...current,
                 {
                     role: "assistant",
-                    content: "Ollama is offline. Start Ollama or update LOCAL_LLM_BASE_URL.",
+                    content: "ARGOS is offline or unreachable. Start ARGOS (port 7799) or set ARGOS_CHAT_URL.",
                 },
             ]);
         }

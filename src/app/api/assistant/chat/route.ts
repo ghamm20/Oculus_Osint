@@ -2,11 +2,28 @@ import { appendFile, mkdir } from "node:fs/promises";
 import { join, sep } from "node:path";
 import { NextResponse } from "next/server";
 
+// ───────────────────────────────────────────────────────────────────────────
+// ARGOS FUSION (Phase 9, 2026-06-10) — Oculus is ARGOS's map pane, not a sixth
+// interface. This route NO LONGER talks to Ollama directly. It is now a THIN
+// PROXY to the ARGOS chat endpoint, which owns the single Ollama/model
+// lifecycle AND the single hash-chained audit chain. Oculus reasoning events
+// flow into ARGOS's audit via the x-oculus-origin marker on the proxied call.
+//
+// Gate compliance:
+//   - ZERO direct Oculus→Ollama: there is no fetch to 11434 / Ollama anywhere
+//     in this file (grep-provable). The only upstream is ARGOS.
+//   - Single audit chain: ARGOS records chat.inference for every proxied turn;
+//     the local breadcrumb below is a NON-authoritative request log only.
+//   - Oculus geospatial routes (3010/3011) are untouched — standalone intact.
+// ───────────────────────────────────────────────────────────────────────────
+
 export const runtime = "nodejs";
 
-const DEFAULT_BASE_URL = "http://127.0.0.1:11434";
-const DEFAULT_MODEL = "llama3.2";
-const REQUEST_TIMEOUT_MS = 45_000;
+const DEFAULT_ARGOS_CHAT_URL = "http://127.0.0.1:7799/api/chat";
+// The persona/voice + model are owned by ARGOS; Oculus just names which.
+const DEFAULT_PERSONA = "sage"; // research/synthesis — the analyst voice
+const DEFAULT_MODEL = "aratan/gemma-4-E4B-q8-it-heretic:latest";
+const REQUEST_TIMEOUT_MS = 60_000;
 const MAX_MESSAGE_CHARS = 4_000;
 const MAX_HISTORY_MESSAGES = 10;
 
@@ -30,10 +47,7 @@ function normalizeMessage(value: unknown): ChatMessage | null {
     }
     const trimmed = content.trim();
     if (!trimmed) return null;
-    return {
-        role,
-        content: trimmed.slice(0, MAX_MESSAGE_CHARS),
-    };
+    return { role, content: trimmed.slice(0, MAX_MESSAGE_CHARS) };
 }
 
 function normalizeMessages(payload: unknown): ChatMessage[] {
@@ -51,14 +65,17 @@ function normalizeMessages(payload: unknown): ChatMessage[] {
     return [];
 }
 
-function getOllamaConfig() {
+function getArgosConfig() {
     return {
-        baseUrl: (process.env.LOCAL_LLM_BASE_URL || DEFAULT_BASE_URL).trim().replace(/\/+$/, ""),
-        model: (process.env.LOCAL_LLM_MODEL || DEFAULT_MODEL).trim(),
+        chatUrl: (process.env.ARGOS_CHAT_URL || DEFAULT_ARGOS_CHAT_URL).trim().replace(/\/+$/, ""),
+        persona: (process.env.ARGOS_PERSONA || DEFAULT_PERSONA).trim(),
+        model: (process.env.ARGOS_MODEL || DEFAULT_MODEL).trim(),
     };
 }
 
-async function appendAssistantAudit(entry: Record<string, unknown>) {
+async function appendProxyBreadcrumb(entry: Record<string, unknown>) {
+    // NON-authoritative local request log. The AUTHORITATIVE audit is ARGOS's
+    // hash-chained chat.inference entry (single audit chain, ARGOS-owned).
     try {
         const cwd = process.cwd();
         const projectRoot = cwd.endsWith(`${sep}.next${sep}standalone`)
@@ -66,41 +83,43 @@ async function appendAssistantAudit(entry: Record<string, unknown>) {
             : cwd;
         const logsDir = join(projectRoot, "logs");
         await mkdir(logsDir, { recursive: true });
-        await appendFile(
-            join(logsDir, "assistant-audit.jsonl"),
-            `${JSON.stringify(entry)}\n`,
-            "utf8",
-        );
+        await appendFile(join(logsDir, "assistant-proxy.jsonl"), `${JSON.stringify(entry)}\n`, "utf8");
     } catch (error) {
-        console.warn("[assistant/chat] Audit write failed:", error);
+        console.warn("[assistant/chat] proxy breadcrumb write failed:", error);
     }
 }
 
-function extractOllamaMessage(payload: unknown): string | null {
-    if (!isRecord(payload)) return null;
-    const message = payload.message;
-    if (isRecord(message) && typeof message.content === "string") {
-        return message.content.trim();
+/** Accumulate the assistant message from ARGOS's NDJSON chat stream. */
+function extractFromArgosStream(raw: string): string {
+    let out = "";
+    for (const line of raw.split("\n")) {
+        const t = line.trim();
+        if (!t) continue;
+        try {
+            const j = JSON.parse(t) as { message?: { content?: string } };
+            if (j.message?.content) out += j.message.content;
+        } catch {
+            /* skip non-JSON / partial frame */
+        }
     }
-    if (typeof payload.response === "string") {
-        return payload.response.trim();
-    }
-    return null;
+    return out.trim();
 }
 
 export async function GET() {
-    const { baseUrl, model } = getOllamaConfig();
+    const { chatUrl, persona, model } = getArgosConfig();
     return NextResponse.json({
         status: "configured",
-        baseUrl,
+        upstream: "argos",
+        argosChatUrl: chatUrl,
+        persona,
         model,
-        auditLog: "logs/assistant-audit.jsonl",
+        note: "Oculus assistant is a thin proxy to ARGOS; ARGOS owns the model + audit chain.",
     });
 }
 
 export async function POST(request: Request) {
     const startedAt = Date.now();
-    const { baseUrl, model } = getOllamaConfig();
+    const { chatUrl, persona, model } = getArgosConfig();
     let messages: ChatMessage[] = [];
 
     try {
@@ -108,102 +127,59 @@ export async function POST(request: Request) {
     } catch {
         return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
     }
-
     if (messages.length === 0) {
         return NextResponse.json({ error: "Message is required." }, { status: 400 });
     }
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-    const auditBase = {
+    const breadcrumb = {
         timestamp: new Date().toISOString(),
         route: "/api/assistant/chat",
-        baseUrl,
+        upstream: chatUrl,
+        persona,
         model,
         messages,
     };
 
     try {
-        const response = await fetch(`${baseUrl}/api/chat`, {
+        // PROXY → ARGOS. The x-oculus-origin header lets ARGOS attribute this
+        // turn in its audit chain. No bearer → ARGOS guest mode (Oculus holds
+        // no operator session; deliberate isolation).
+        const response = await fetch(chatUrl, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "x-oculus-origin": "assistant-chat" },
             signal: controller.signal,
-            body: JSON.stringify({
-                model,
-                stream: false,
-                messages: [
-                    {
-                        role: "system",
-                        content:
-                            "You are Oculus Analyst, a local read-only OSINT assistant inside Oculus0Osint. Analyze only the user-provided text and general context. Do not claim to control the app, change settings, browse private data, or perform actions. Be concise, careful with uncertainty, and avoid operational instructions that would enable harm.",
-                    },
-                    ...messages,
-                ],
-            }),
+            body: JSON.stringify({ messages, personaId: persona, model, useRetrieval: false }),
         });
 
         if (!response.ok) {
             const detail = await response.text();
-            await appendAssistantAudit({
-                ...auditBase,
-                status: "ollama_error",
-                statusCode: response.status,
-                detail: detail.slice(0, 1_000),
-                durationMs: Date.now() - startedAt,
-            });
+            await appendProxyBreadcrumb({ ...breadcrumb, status: "argos_error", statusCode: response.status, detail: detail.slice(0, 1_000), durationMs: Date.now() - startedAt });
             return NextResponse.json(
-                {
-                    error: "Ollama returned an error.",
-                    detail: detail.slice(0, 1_000),
-                    offline: false,
-                    model,
-                },
+                { error: "ARGOS returned an error.", detail: detail.slice(0, 1_000), offline: false, model },
                 { status: 502 },
             );
         }
 
-        const payload = await response.json();
-        const assistantMessage = extractOllamaMessage(payload);
+        const raw = await response.text();
+        const assistantMessage = extractFromArgosStream(raw);
         if (!assistantMessage) {
-            await appendAssistantAudit({
-                ...auditBase,
-                status: "empty_response",
-                durationMs: Date.now() - startedAt,
-            });
-            return NextResponse.json(
-                { error: "Ollama returned an empty response.", offline: false, model },
-                { status: 502 },
-            );
+            await appendProxyBreadcrumb({ ...breadcrumb, status: "empty_response", durationMs: Date.now() - startedAt });
+            return NextResponse.json({ error: "ARGOS returned an empty response.", offline: false, model }, { status: 502 });
         }
 
-        await appendAssistantAudit({
-            ...auditBase,
-            status: "ok",
-            response: assistantMessage,
-            durationMs: Date.now() - startedAt,
-        });
-
-        return NextResponse.json({
-            message: assistantMessage,
-            model,
-            offline: false,
-        });
+        await appendProxyBreadcrumb({ ...breadcrumb, status: "ok", response: assistantMessage, durationMs: Date.now() - startedAt });
+        return NextResponse.json({ message: assistantMessage, model, offline: false });
     } catch (error) {
         const offline = error instanceof Error && (error.name === "AbortError" || error.message.includes("fetch failed"));
-        await appendAssistantAudit({
-            ...auditBase,
-            status: offline ? "offline" : "request_error",
-            error: error instanceof Error ? error.message : String(error),
-            durationMs: Date.now() - startedAt,
-        });
+        await appendProxyBreadcrumb({ ...breadcrumb, status: offline ? "offline" : "request_error", error: error instanceof Error ? error.message : String(error), durationMs: Date.now() - startedAt });
         return NextResponse.json(
             {
-                error: offline
-                    ? "Ollama is offline or unreachable."
-                    : "Local assistant request failed.",
+                error: offline ? "ARGOS is offline or unreachable." : "Assistant proxy request failed.",
                 offline,
                 model,
-                baseUrl,
+                argosChatUrl: chatUrl,
             },
             { status: offline ? 503 : 500 },
         );
