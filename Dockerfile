@@ -67,7 +67,13 @@ COPY --from=builder /app/src/generated ./src/generated
 # Copy standalone server output
 COPY --from=builder /app/.next/standalone ./
 
-# Copy deployed production node_modules
+# Copy deployed production node_modules.
+# The standalone output above ships its own traced node_modules where some
+# entries (pnpm layout) are symlinks; BuildKit cannot COPY a real directory
+# over an existing symlink ("cannot copy to non-directory"), which made this
+# stage unbuildable. The pnpm-deployed tree at /app/prod/node_modules is
+# complete for production, so it REPLACES the traced tree instead of merging.
+RUN rm -rf ./node_modules
 COPY --from=builder /app/prod/node_modules ./node_modules
 
 # We no longer copy proddeps/node_modules. Next.js standalone output
